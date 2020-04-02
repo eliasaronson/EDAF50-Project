@@ -14,6 +14,7 @@ public:
   void addArticle(Article);
   void removeArticle(long long int);
   long long int getId();
+  string getName();
   vector<Article> getAllArticles();
 private:
   string name;

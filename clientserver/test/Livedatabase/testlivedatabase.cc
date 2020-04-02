@@ -11,7 +11,7 @@ using std::endl;
 int main() {
     LiveDataBase ldbase;
     Article a1("How to C++", "Aldux Huxley", "Always write a good h-file.", 1);
-    Article a2("How to C", "Aldux Huxley", "What is a struct?", 2);
+    Article a2("How to C", "Terence McKenna", "What is a struct?", 2);
     ldbase.addNewsgroup("Name1");
     ldbase.addNewsgroup("Name2");
     ldbase.addArtikel(a1, 0);
@@ -20,6 +20,9 @@ int main() {
     vector<Newsgroup> listN = ldbase.listNewsgroups();
 
     for(auto a : listA){
-        cout << a.getTitle() << endl;
+        cout << "Newsgroup: " << listN[0].getName() << endl;
+        cout << "Title: " << a.getTitle() << endl;
+        cout << "Author: " << a.getAuthor() << endl;
+        cout << "Text: " << a.getText() << endl;
     }
 }

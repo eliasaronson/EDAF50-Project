@@ -21,6 +21,10 @@ void Newsgroup::removeArticle(long long int id){
    
 }
 
+string Newsgroup::getName(){
+  return name;  
+}
+
 long long int Newsgroup::getId(){
   return id;
 }
