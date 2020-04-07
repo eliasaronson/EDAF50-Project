@@ -2,6 +2,7 @@
 #include "messagehandler.h"
 #include "connectionclosedexception.h"
 #include "server.h"
+#include "protocol.h"
 #include "livedatabase.h"
 #include <cstdlib>
 #include <iostream>
@@ -11,13 +12,11 @@
 
 using namespace std;
 
-MessageHandler::MessageHandler(Connection& con){
-  conn(con);
-}
+MessageHandler::MessageHandler(const shared_ptr<Connection>& con) : conn(con){}
 /*
 * Read an integer from a client.
 */
-int readNumber(const shared_ptr<Connection>& conn) {
+int MessageHandler::readNumber() {
     unsigned char byte1 = conn->read();
     unsigned char byte2 = conn->read();
     unsigned char byte3 = conn->read();
@@ -25,12 +24,42 @@ int readNumber(const shared_ptr<Connection>& conn) {
     return (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4;
 }
 
+string MessageHandler::readString(){
+    string res{};  
+
+    char c = conn->read();
+    while(c != '$'){
+      res += c;
+    } 
+
+    return res;
+}
+
+Protocol MessageHandler::usrCommand(){
+  unsigned char byte1 = conn->read();
+  unsigned char byte2 = conn->read();
+  unsigned char byte3 = conn->read();
+  unsigned char byte4 = conn->read();
+  int tmp =  (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4;
+  return static_cast<Protocol>(tmp);
+}
 /*
 * Send a string to a client.
 */
-void writeString(const shared_ptr<Connection>& conn, const string& s) {
+void MessageHandler::writeString(const string& s) {
     for (char c : s) {
         conn->write(c);
     }
     conn->write('$');
+}
+
+void MessageHandler::writeInt(const int& i){
+  conn->write((i >> 24) & 0xFF);
+  conn->write((i >> 16) & 0xFF);
+  conn->write((i >> 8) & 0xFF);
+  conn->write((i) & 0xFF);
+}
+
+void MessageHandler::writeInt(const Protocol& p){
+  writeInt(static_cast<int>(p));
 }

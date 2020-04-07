@@ -13,7 +13,7 @@ class LiveDataBase {
 public:
   LiveDataBase() = default;
   void addNewsgroup(string);
-  void removeNewsgroup(long long int GroupId);
+  void removeNewsgroup(long long int);
   void addArtikel(string, string, string, long long int);
   void removeArtikel(long long int, long long int);
   vector<Article> listArtikels(long long int); 

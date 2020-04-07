@@ -2,15 +2,30 @@
 #define MESSAGEHANDLER_H
 
 #include "connection.h"
+#include "connectionclosedexception.h"
+#include "server.h"
+#include "protocol.h"
+#include <cstdlib>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
 #include <string>
+#include "connection.h"
 
 using std::string;
+using std::shared_ptr;
 
 class MessageHandler {
 public:
-  MessageHandler(Connection&);
+  MessageHandler(const shared_ptr<Connection>&);
+  int readNumber();
+  string readString();
+  Protocol usrCommand();
+  void writeString(const string&);
+  void writeInt(const int&);
+  void writeInt(const Protocol&);
 private:
-  Connection& conn;
+  const shared_ptr<Connection>& conn;
 };
 
 #endif
