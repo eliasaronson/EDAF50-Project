@@ -9,6 +9,9 @@
 #include <dirent.h> 		//to open dirr
 #include <libgen.h>			//to open dirr
 #include <sstream>      	//std::stringstream
+#include <string.h>
+#include <stdio.h>
+#include <errno.h>
 
 using std::string;
 using std::cout;
@@ -19,18 +22,19 @@ using std::istream;
 
 bool writeNewsgroup(string &newsgroupname){
 	//add which directory it should be saved in, currently saved i current dirr. with input name
-	//Use form /usr/dirr1/newsgroupname
-	string path(newsgroupname);		
-	if (mkdir(newsgroupname, 0) == -1) {
+	//Use form ~/usr/dirr1/newsgroupname
+	string path("mkdir -p ~/Database/" + newsgroupname);		
+	int status = system(path.c_str());
+	if (status == -1) {
         cerr << "Error :  " << strerror(errno) << endl; 
 		return false;
 	}
     else{
-        cout << "Directory created i.e. Newsgroup: " << newsgroupname;
+        cout << "Directory created i.e. Newsgroup: " << newsgroupname << endl;
 		return true;
 	}
 }
-
+/*
 void saveArticle(string &newsgroupname, istream &article){
 	//same path as write newsgroup
 	string path(newsgroupname);
@@ -76,13 +80,13 @@ void saveArticle(string &newsgroupname, istream &article){
 	}
 
 }
-
+*/
 int main(){
 	//On disk database, store newsgroups in vector<string> and articles as objects.
-	string newsgroupname(example);
+	string newsgroupname("example");
 	writeNewsgroup(newsgroupname);
 	//save article with filename id (unique) use object id in database, articles use shared id counter cross objects?
 	istream stream();
-	saveArticle(newsgroupname, stream);
+//	saveArticle(newsgroupname, stream);
 	exit(0);
 }
