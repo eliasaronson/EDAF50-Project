@@ -1,7 +1,8 @@
 //Test program for making/deleting directories.
 #include <fstream>
 #include <string>
-#include <bits/stdc++.h> 	//to make dirr
+#include <sys/stat.h>
+//#include <bits/stdc++.h> 	//to make dirr
 #include <iostream> 
 #include <sys/stat.h> 		//to make dirr
 #include <sys/types.h>		//to make dirr and open
@@ -14,8 +15,9 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::stringstream;
+using std::istream;
 
-boolean writeNewsgroup(string &newsgroupname){
+bool writeNewsgroup(string &newsgroupname){
 	//add which directory it should be saved in, currently saved i current dirr. with input name
 	//Use form /usr/dirr1/newsgroupname
 	string path(newsgroupname);		
