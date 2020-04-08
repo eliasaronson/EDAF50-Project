@@ -63,3 +63,10 @@ void MessageHandler::writeInt(const int& i){
 void MessageHandler::writeInt(const Protocol& p){
   writeInt(static_cast<int>(p));
 }
+
+void MessageHandler::comEnd(){
+  int com = readNumber();  
+  if(com != static_cast<int>(Protocol::COM_END)){
+    throw exception();
+  }
+}

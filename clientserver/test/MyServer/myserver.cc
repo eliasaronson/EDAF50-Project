@@ -1,5 +1,6 @@
 /* myserver.cc: sample server program */
 #include "connection.h"
+#include "database.h"
 #include "connectionclosedexception.h"
 #include "server.h"
 #include "protocol.h"
@@ -35,8 +36,10 @@ Server init(int argc, char* argv[]) {
     return server;
 }
 
-void ListNGs(MessageHandler& mess, LiveDataBase& db){
-
+void ListNGs(MessageHandler& mess, DataBase& db){
+    //Input
+    mess.comEnd();
+    //Output
     mess.writeInt(Protocol::ANS_LIST_NG);
 
     auto tmp = db.listNewsgroups();  
@@ -50,11 +53,16 @@ void ListNGs(MessageHandler& mess, LiveDataBase& db){
     mess.writeInt(Protocol::ANS_END);
 }
 
-void createNG(MessageHandler& mess, LiveDataBase& db){
+void createNG(MessageHandler& mess, DataBase& db){
 
-    mess.writeInt(Protocol::ANS_CREATE_NG);
+    //Input
     string name = mess.readString();
+    mess.comEnd();
 
+    //Output
+    mess.writeInt(Protocol::ANS_CREATE_NG);
+
+    // Edit check
     string res = db.addNewsgroup(name);
     if (res.empty()) {
         mess.writeInt(Protocol::ANS_NAK);
@@ -66,10 +74,12 @@ void createNG(MessageHandler& mess, LiveDataBase& db){
     mess.writeInt(Protocol::ANS_END);
 }
 
-void deleteNG(MessageHandler& mess, LiveDataBase& db){
-
-    mess.writeInt(Protocol::ANS_DELETE_NG);
+void deleteNG(MessageHandler& mess, DataBase& db){
+    //Input
     long long int id = mess.readNumber();
+    mess.comEnd();
+    //Output
+    mess.writeInt(Protocol::ANS_DELETE_NG);
 
     string res = db.removeNewsgroup(id);
     if (res.empty()) {
@@ -82,10 +92,12 @@ void deleteNG(MessageHandler& mess, LiveDataBase& db){
     mess.writeInt(Protocol::ANS_END);
 }
 
-void listA(MessageHandler& mess, LiveDataBase& db){
-
-    mess.writeInt(Protocol::ANS_LIST_NG);
+void listA(MessageHandler& mess, DataBase& db){
+    //Input
     long long int id = mess.readNumber();
+    mess.comEnd();
+    //Output
+    mess.writeInt(Protocol::ANS_LIST_ART);
 
     auto tmp = db.listArtikels(id);  
     // Lägg in check för error
@@ -99,15 +111,88 @@ void listA(MessageHandler& mess, LiveDataBase& db){
     }
 
     //If not
-    //
-    //
-    
+    mess.writeInt(Protocol::ANS_NAK);
+    mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
     
     
     mess.writeInt(Protocol::ANS_END);
 }
 
-string case_handler(MessageHandler& mess, LiveDataBase& db) {
+void createA(MessageHandler& mess, DataBase& db){
+    //Input
+    long long int id = mess.readNumber();
+    string title = mess.readString();
+    string auth = mess.readString();
+    string text = mess.readString();
+    mess.comEnd();
+    //Output
+    mess.writeInt(Protocol::ANS_CREATE_ART);
+
+    // Lägg in check för error
+    db.addArtikel(title, auth, text, id); 
+    //If works
+        mess.writeInt(Protocol::ANS_ACK);
+
+    //If not
+        mess.writeInt(Protocol::ANS_NAK);
+        mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
+    
+    
+    mess.writeInt(Protocol::ANS_END);
+}
+
+void deleteA(MessageHandler& mess, DataBase& db){
+    //Input
+    long long int idG = mess.readNumber();
+    long long int idA = mess.readNumber();
+    mess.comEnd();
+    //Output
+    mess.writeInt(Protocol::ANS_DELETE_ART);
+
+    // Lägg in check för error
+    db.removeArtikel(idG, idA);
+    //If works
+        mess.writeInt(Protocol::ANS_ACK);
+
+    //If not
+        mess.writeInt(Protocol::ANS_NAK);
+        //No NG
+            mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
+        //No Art
+            mess.writeInt(Protocol::ERR_ART_DOES_NOT_EXIST);
+    
+            
+    mess.writeInt(Protocol::ANS_END);
+}
+
+void getA(MessageHandler& mess, DataBase& db){
+    //Input
+    long long int idG = mess.readNumber();
+    long long int idA = mess.readNumber();
+    mess.comEnd();
+    //Output
+    mess.writeInt(Protocol::ANS_GET_ART);
+
+    // Lägg in check för error
+    Article a = db.getArticle(idG, idA);
+    //If works
+        mess.writeInt(Protocol::ANS_ACK);
+        mess.writeString(a.getTitle());
+        mess.writeString(a.getAuthor());
+        mess.writeString(a.getText());
+
+    //If not
+        mess.writeInt(Protocol::ANS_NAK);
+        //No NG
+            mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
+        //No Art
+            mess.writeInt(Protocol::ERR_ART_DOES_NOT_EXIST);
+    
+            
+    mess.writeInt(Protocol::ANS_END);
+}
+
+void case_handler(MessageHandler& mess, DataBase& db) {
     string resualt;
     switch (mess.usrCommand())
     {
@@ -119,21 +204,29 @@ string case_handler(MessageHandler& mess, LiveDataBase& db) {
         break;
       case Protocol::COM_LIST_ART: listA(mess, db);
         break;
-      default:
+      case Protocol::COM_CREATE_ART: createA(mess, db);
+        break;
+      case Protocol::COM_DELETE_ART: deleteA(mess, db);
+        break;
+      case Protocol::COM_GET_ART: getA(mess, db);
+        break;
+      default: //Maybe some error
         break;
     }
-    return resualt;
 }
 
 int main(int argc, char* argv[]) {
 
     auto server = init(argc, argv);
-
+    DataBase *db;
     if (stoi(argv[2]) == 1) {
-        LiveDataBase datab{}; // Is that correct initiation
+        db = new LiveDataBase();
     } else {
-        // Create diskdatabase with same name
+        // Create diskdatabase instead
+        db = new LiveDataBase();
     }
+    
+    
 
     while (true) {
         auto conn = server.waitForActivity();
@@ -142,9 +235,8 @@ int main(int argc, char* argv[]) {
 
         if (conn != nullptr) {
             try {
-
-                case_handler(mess, datab);
-
+                //Handle message
+                case_handler(mess, *db);
             } catch (ConnectionClosedException&) {
                 server.deregisterConnection(conn);
                 cout << "Client closed connection" << endl;
@@ -155,5 +247,6 @@ int main(int argc, char* argv[]) {
             cout << "New client connects" << endl;
         }
     }
+    delete(db);
     return 0;
 }
