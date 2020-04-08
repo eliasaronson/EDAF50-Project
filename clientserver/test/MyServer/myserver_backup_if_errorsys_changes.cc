@@ -62,16 +62,15 @@ void createNG(MessageHandler& mess, DataBase& db){
     //Output
     mess.writeInt(Protocol::ANS_CREATE_NG);
 
-    try{
-        db.addNewsgroup(name);
-    } catch (exception& e) {
+    // Edit check
+    string res = db.addNewsgroup(name);
+    if (res.empty()) {
         mess.writeInt(Protocol::ANS_NAK);
         mess.writeInt(Protocol::ERR_NG_ALREADY_EXISTS);
-        mess.writeInt(Protocol::ANS_END);
-        return;
+    }else {
+        mess.writeInt(Protocol::ANS_ACK);
     }
 
-    mess.writeInt(Protocol::ANS_ACK);
     mess.writeInt(Protocol::ANS_END);
 }
 
@@ -82,16 +81,14 @@ void deleteNG(MessageHandler& mess, DataBase& db){
     //Output
     mess.writeInt(Protocol::ANS_DELETE_NG);
 
-    try{
-        db.removeNewsgroup(id);
-    } catch (exception& e) {
+    string res = db.removeNewsgroup(id);
+    if (res.empty()) {
         mess.writeInt(Protocol::ANS_NAK);
         mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
-        mess.writeInt(Protocol::ANS_END);
-        return;
+    }else {
+        mess.writeInt(Protocol::ANS_ACK);
     }
 
-    mess.writeInt(Protocol::ANS_ACK);
     mess.writeInt(Protocol::ANS_END);
 }
 
@@ -102,26 +99,21 @@ void listA(MessageHandler& mess, DataBase& db){
     //Output
     mess.writeInt(Protocol::ANS_LIST_ART);
 
+    auto tmp = db.listArtikels(id);  
     // Lägg in check för error
     
     //If works
-    try{
-        auto tmp = db.listArtikels(id);  
-    } catch (exception& e) {
-        mess.writeInt(Protocol::ANS_NAK);
-        mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
-        mess.writeInt(Protocol::ANS_END);
-        return;
-    }
-    
-    auto tmp = db.listArtikels(id); //Quick fix. Come up with better solution. 
-
     mess.writeInt(Protocol::ANS_ACK);
     mess.writeInt(tmp.size());
     for (auto x : tmp) {
       string res = to_string(x.getId()) + " " + x.getTitle();
       mess.writeString(res);
     }
+
+    //If not
+    mess.writeInt(Protocol::ANS_NAK);
+    mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
+    
     
     mess.writeInt(Protocol::ANS_END);
 }
@@ -136,16 +128,15 @@ void createA(MessageHandler& mess, DataBase& db){
     //Output
     mess.writeInt(Protocol::ANS_CREATE_ART);
 
-    try{
-        db.addArtikel(title, auth, text, id); 
-    } catch (exception& e) {
+    // Lägg in check för error
+    db.addArtikel(title, auth, text, id); 
+    //If works
+        mess.writeInt(Protocol::ANS_ACK);
+
+    //If not
         mess.writeInt(Protocol::ANS_NAK);
         mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
-        mess.writeInt(Protocol::ANS_END);
-        return;
-    }
     
-    mess.writeInt(Protocol::ANS_ACK);
     
     mess.writeInt(Protocol::ANS_END);
 }
@@ -158,20 +149,18 @@ void deleteA(MessageHandler& mess, DataBase& db){
     //Output
     mess.writeInt(Protocol::ANS_DELETE_ART);
 
-    try{
-        db.removeArtikel(idG, idA);
-    } catch (exception& e) {
+    // Lägg in check för error
+    db.removeArtikel(idG, idA);
+    //If works
+        mess.writeInt(Protocol::ANS_ACK);
+
+    //If not
         mess.writeInt(Protocol::ANS_NAK);
-        if(e.what() == to_string(static_cast<int>(Protocol::ERR_NG_DOES_NOT_EXIST))){
+        //No NG
             mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
-        } else{
+        //No Art
             mess.writeInt(Protocol::ERR_ART_DOES_NOT_EXIST);
-        }
-        mess.writeInt(Protocol::ANS_END);
-        return;
-    }
     
-    mess.writeInt(Protocol::ANS_ACK);
             
     mess.writeInt(Protocol::ANS_END);
 }
@@ -184,26 +173,21 @@ void getA(MessageHandler& mess, DataBase& db){
     //Output
     mess.writeInt(Protocol::ANS_GET_ART);
 
+    // Lägg in check för error
+    Article a = db.getArticle(idG, idA);
+    //If works
+        mess.writeInt(Protocol::ANS_ACK);
+        mess.writeString(a.getTitle());
+        mess.writeString(a.getAuthor());
+        mess.writeString(a.getText());
 
-    try{
-        Article a = db.getArtikel(idG, idA);
-    } catch (exception& e) {
+    //If not
         mess.writeInt(Protocol::ANS_NAK);
-        if(e.what() == to_string(static_cast<int>(Protocol::ERR_NG_DOES_NOT_EXIST))){
+        //No NG
             mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
-        } else{
+        //No Art
             mess.writeInt(Protocol::ERR_ART_DOES_NOT_EXIST);
-        }
-        mess.writeInt(Protocol::ANS_END);
-        return;
-    }
-
-    Article a = db.getArtikel(idG, idA); //Again quick fix
-
-    mess.writeInt(Protocol::ANS_ACK);
-    mess.writeString(a.getTitle());
-    mess.writeString(a.getAuthor());
-    mess.writeString(a.getText());
+    
             
     mess.writeInt(Protocol::ANS_END);
 }

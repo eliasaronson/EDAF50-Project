@@ -19,6 +19,7 @@ public:
   void removeArtikel(long long int, long long int) override;
   vector<Article> listArtikels(long long int) override;
   vector<Newsgroup> listNewsgroups() override;
+  Article getArtikel(long long int, long long int) override;
 private:
   vector<Newsgroup> StoreNewsG; 
   long long int idNextNewsG{};
