@@ -1,26 +1,34 @@
 #ifndef DISKDATABASE_H
 #define DISKEDATABASE_H
 
-#include <vector>
 #include <string>
-#include "newsgroup.h"
-#include "article.h"
+#include <sys/stat.h>
+#include <iostream>
+#include <sys/types.h>
+#include <string.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <sstream>
 
-using std::vector;
 using std::string;
+using std::istream;
 
 class DiskDataBase {
 public:
-  DiskDataBase();
-  void addNewsgroup(string);
-  void removeNewsgroup(long long int GroupId);
-  void addArtikel(Article, long long int);
-  void removeArtikel(long long int, long long int);
-  vector<Article> listArtikels(long long int); 
-  vector<Newsgroup> listNewsgroups();
+  DiskDataBase() = default;
+  DiskDataBase(const DiskDataBase& d) = default;
+  void addNewsgroup(const string& name);
+  void removeNewsgroup(size_t& groupId);
+  void addArticle(string& article, size_t& artId);
+  void removeArticle(size_t& groupId, size_t& artId);
+  //vector<Article> listArtikels(size_t&); 
+  //vector<Newsgroup> listNewsgroups();
 private:
-  vector<Newsgroup> StoreNewsG; 
-  long long int idNextNewsG{};
+  size_t idNextNewsG = 0;
 };
+
+bool containsWord(const string& name);
+int currentIndex();
 
 #endif

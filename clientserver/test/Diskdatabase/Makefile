@@ -21,12 +21,12 @@ LDFLAGS =   -g
 #LDFLAGS +=  -stdlib=libc++
 
 # Targets
-PROGS = test 
+PROGS = diskdatabaseTest
 
 all: $(PROGS)
 
 # Targets rely on implicit rules for compiling and linking
-test: test.o
+diskdatabaseTest: diskdatabaseTest.o diskdatabase.o
 
 # Phony targets
 .PHONY: all test clean distclean
