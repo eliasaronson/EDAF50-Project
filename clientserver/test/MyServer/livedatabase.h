@@ -12,7 +12,8 @@ using std::string;
 
 class LiveDataBase : public DataBase{
 public:
-  LiveDataBase();
+  LiveDataBase() = default;
+  ~LiveDataBase() = default;
   void addNewsgroup(string) override;
   void removeNewsgroup(long long int) override;
   void addArtikel(string, string, string, long long int) override;
