@@ -16,6 +16,7 @@ public:
   long long int getId();
   string getName();
   vector<Article> getAllArticles();
+  Article getArticle(long long int);
 private:
   string name;
   long long int id;

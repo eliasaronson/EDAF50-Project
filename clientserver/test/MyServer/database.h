@@ -18,6 +18,7 @@ public:
   virtual void removeArtikel(long long int, long long int);
   virtual vector<Article> listArtikels(long long int); 
   virtual vector<Newsgroup> listNewsgroups();
+  virtual Article getArtikel(long long int, long long int);
 };
 
 #endif
