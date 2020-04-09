@@ -30,5 +30,7 @@ private:
 
 bool containsWord(const string& name);
 int currentIndex();
+string getName(size_t& groupId);
+string getId_txt();
 
 #endif

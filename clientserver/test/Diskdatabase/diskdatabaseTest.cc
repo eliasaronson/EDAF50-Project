@@ -14,7 +14,7 @@ int main(){
 	string a = "a";
 	string b = "b";
 	string c = "c";
-	//string e = "e";
+	string e = "e";
 
 	cout << name << endl;
 	cout << test << endl;
@@ -25,5 +25,8 @@ int main(){
 	d.addNewsgroup(c);
 	d.addNewsgroup(test);
 	cout << "In main after d.add..." << endl;
+	size_t id = 2;
+	d.removeNewsgroup(id);
+	d.addNewsgroup(e);
 	return 0;
 }
