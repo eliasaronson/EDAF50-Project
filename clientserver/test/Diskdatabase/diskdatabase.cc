@@ -162,12 +162,116 @@ void DiskDataBase::removeNewsgroup(size_t& groupId) {
 	}
 }
 
-void DiskDataBase::addArticle(string& article, size_t& artId) {
+//returns the highest file number(article id)+1 in the directory with id grpId
+int nextArtId(size_t& grpId){
+	string grpName = getName(grpId); 
+	//find home/username path
+	struct passwd *pw = getpwuid(getuid());
+	const char *homedir = pw->pw_dir;
+	string homeDir(homedir);
+	//opendir needs full path, ~/Database/... does not work
+	string path(homeDir + "/Database/" + grpName);
+	struct dirent *entry;
+	DIR *dir = opendir(path.c_str());
+	//Mostly for finding errors
+	if (errno == ENOENT){
+		cout << "opendir failed: " << std::strerror(errno) << endl;
+	}
 
+	if (dir == NULL){
+		return -1;
+	}
+
+	//find last used ID
+	//reads hidden files as well
+	int id = 0;
+	while ((entry = readdir(dir)) != NULL) {
+		id = std::atoi(entry->d_name);
+	}
+	closedir(dir);
+	
+	cout << "id in nextArtId: " << id << endl;
+	id++;
+	return id;
+}
+
+void DiskDataBase::addArticle(string& title, string& auth, string& text, size_t& grpId){
+	string grpName = getName(grpId);
+	if (grpName.compare("ERRORIdNotConnectToName")==0){
+		throw "No newsgroup with this id";
+	} else {
+		int artId = nextArtId(grpId);
+		if (artId == -1){
+			throw "can't open directory";
+		}
+		struct passwd *pw = getpwuid(getuid());
+		const char *homedir = pw->pw_dir;
+		string homeDir(homedir);
+		string path(homeDir + "/Database/" + grpName + "/" + std::to_string(artId));
+		std::ofstream outFile(path);
+		if (!outFile.is_open()){
+			cout << "Error : outFile isn't open" << endl;
+		}
+		outFile << title << '\n' << auth << '\n' << text;
+		outFile.close();
+		cout << "outFile " << std::to_string(artId) << " closed" << endl;
+	}
+}
+
+//newsgroup must exist to call this
+bool containsArticle(size_t& grpId, size_t& artId){
+	string grpName = getName(grpId); 
+	//find home/username path
+	struct passwd *pw = getpwuid(getuid());
+	const char *homedir = pw->pw_dir;
+	string homeDir(homedir);
+	//opendir needs full path, ~/Database/... does not work
+	string path(homeDir + "/Database/" + grpName);
+	struct dirent *entry;
+	DIR *dir = opendir(path.c_str());
+	//Mostly for finding errors
+	if (errno == ENOENT){
+		cout << "opendir failed: " << std::strerror(errno) << endl;
+	}
+
+	if (dir == NULL){
+		return 0;
+	}
+
+	//Check if ID exists
+	//reads hidden files as well
+	int articleId = static_cast<int>(artId);
+	int id = 0;
+
+	//add to handle hidden file . and ..?
+	while ((entry = readdir(dir)) != NULL) {
+		id = std::atoi(entry->d_name);
+		if (id == articleId){
+			closedir(dir);
+		       return true;
+		}	       
+	}
+	closedir(dir);
+	return false;
 }
 
 void DiskDataBase::removeArticle(size_t& groupId, size_t& artId) {
-    
+	string grpName = getName(groupId);
+	if (grpName.compare("ERRORIdNotConnectToName")==0){
+		cout << "Error : can't remove article: newsgroup doesn't exist" << endl;
+		throw "No newsgroup with this id";
+	} else if (!containsArticle(groupId, artId)){
+		cout << "Error : can't remove article: article doesn't exists" << endl;
+		throw "No Article with this id";
+	}
+	else {
+		string command("rm ~/Database/" + grpName + "/" + std::to_string(artId));
+		int status = system(command.c_str());
+		if (status == -1){
+        		cerr << "Error :  " << strerror(errno) << endl; 
+			throw "Error removing article";
+		}
+	}
 }
 /*
 vector<Article> LiveDataBase::listArtikels(long long int id) {

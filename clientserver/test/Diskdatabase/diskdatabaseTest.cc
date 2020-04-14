@@ -7,6 +7,9 @@ using std::cout;
 using std::endl;
 
 int main(){
+	size_t tempid = 1;
+	int returntempid = nextArtId(tempid);
+	cout << "next art id in main: " << returntempid << endl;
 	cout << "current index: " << currentIndex() << endl;
 	DiskDataBase d;
 	string name("test123");
@@ -26,7 +29,19 @@ int main(){
 	d.addNewsgroup(test);
 	cout << "In main after d.add..." << endl;
 	size_t id = 2;
-	d.removeNewsgroup(id);
+	//d.removeNewsgroup(id);
 	d.addNewsgroup(e);
+	size_t grp3 = 3;
+	string title("title");
+	string auth("auth");
+	string text("text");
+	d.addArticle(title,auth,text,grp3);
+	d.addArticle(title,auth,text,grp3);
+	d.addArticle(title,auth,text,grp3);
+	d.addArticle(title,auth,text,grp3);
+	d.addArticle(title,auth,text,grp3);
+	d.addArticle(title,auth,text,grp3);
+	//d.removeArticle(grp3,grp3);
+	//d.removeArticle(grp3,id);
 	return 0;
 }
