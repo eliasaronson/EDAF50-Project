@@ -26,7 +26,7 @@ PROGS = diskdatabaseTest
 all: $(PROGS)
 
 # Targets rely on implicit rules for compiling and linking
-diskdatabaseTest: diskdatabaseTest.o diskdatabase.o
+diskdatabaseTest: diskdatabaseTest.o diskdatabase.o article.o newsgroup.o
 
 # Phony targets
 .PHONY: all test clean distclean

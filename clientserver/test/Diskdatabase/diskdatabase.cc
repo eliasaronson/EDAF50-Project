@@ -17,7 +17,7 @@ int currentIndex(){
 			char ch;
 			fin.get(ch);					//get current byte's data
 
-			if((int)fin.tellg() <= 1){			//if data was at or before 0th byte first line is last, stop
+			if(static_cast<int>(fin.tellg()) <= 1){			//if data was at or before 0th byte first line is last, stop
 				fin.seekg(0);
 				keepLooping = false;
 			}
@@ -104,9 +104,9 @@ void DiskDataBase::addNewsgroup(const string& name) {
 	}
 }
 
-string getName(size_t& groupId){
+string getName(int& groupId){
 	std::stringstream ss(getId_txt());
-	size_t tempId;
+	int tempId;
 	string word;
 	while (!ss.eof() && ss.good()){
 		ss>>word;
@@ -119,10 +119,10 @@ string getName(size_t& groupId){
 
 }
 
-void DiskDataBase::removeNewsgroup(size_t& groupId) {
+void DiskDataBase::removeNewsgroup(int& groupId) {
 	string name = getName(groupId);
 	if (name.compare("ERRORIdNotConnectToName")==0){
-		throw "No newsgroup with this id";
+		throw std::out_of_range("No Newsgroup with this id");
 	} else {
 		string path("rm -r ~/Database/" + name);
 		int status = system(path.c_str());
@@ -136,7 +136,7 @@ void DiskDataBase::removeNewsgroup(size_t& groupId) {
 			//should be ~/Database/temp.txt
 			std::ofstream outFile("temp.txt", std::ofstream::out);
 			std::stringstream ss(getId_txt());
-			size_t tempId;
+			int tempId;
 			string word;
 			while (!ss.eof() && ss.good()){
 				ss>>word;
@@ -163,7 +163,7 @@ void DiskDataBase::removeNewsgroup(size_t& groupId) {
 }
 
 //returns the highest file number(article id)+1 in the directory with id grpId
-int nextArtId(size_t& grpId){
+int nextArtId(int& grpId){
 	string grpName = getName(grpId); 
 	//find home/username path
 	struct passwd *pw = getpwuid(getuid());
@@ -186,7 +186,10 @@ int nextArtId(size_t& grpId){
 	//reads hidden files as well
 	int id = 0;
 	while ((entry = readdir(dir)) != NULL) {
-		id = std::atoi(entry->d_name);
+    int temp = std::atoi(entry->d_name);
+      if (temp > id) {
+        id = temp;
+      }
 	}
 	closedir(dir);
 	
@@ -195,7 +198,7 @@ int nextArtId(size_t& grpId){
 	return id;
 }
 
-void DiskDataBase::addArticle(string& title, string& auth, string& text, size_t& grpId){
+void DiskDataBase::addArticle(string& title, string& auth, string& text, int& grpId){
 	string grpName = getName(grpId);
 	if (grpName.compare("ERRORIdNotConnectToName")==0){
 		throw "No newsgroup with this id";
@@ -219,7 +222,7 @@ void DiskDataBase::addArticle(string& title, string& auth, string& text, size_t&
 }
 
 //newsgroup must exist to call this
-bool containsArticle(size_t& grpId, size_t& artId){
+bool containsArticle(int& grpId, int& artId){
 	string grpName = getName(grpId); 
 	//find home/username path
 	struct passwd *pw = getpwuid(getuid());
@@ -240,7 +243,7 @@ bool containsArticle(size_t& grpId, size_t& artId){
 
 	//Check if ID exists
 	//reads hidden files as well
-	int articleId = static_cast<int>(artId);
+	int articleId = artId;
 	int id = 0;
 
 	//add to handle hidden file . and ..?
@@ -255,7 +258,7 @@ bool containsArticle(size_t& grpId, size_t& artId){
 	return false;
 }
 
-void DiskDataBase::removeArticle(size_t& groupId, size_t& artId) {
+void DiskDataBase::removeArticle(int& groupId, int& artId) {
 	string grpName = getName(groupId);
 	if (grpName.compare("ERRORIdNotConnectToName")==0){
 		cout << "Error : can't remove article: newsgroup doesn't exist" << endl;
@@ -273,11 +276,68 @@ void DiskDataBase::removeArticle(size_t& groupId, size_t& artId) {
 		}
 	}
 }
-/*
-vector<Article> LiveDataBase::listArtikels(long long int id) {
 
+vector<Article> DiskDataBase::listArtikels(const long long int& id) {
+  int tempId = static_cast<int>(id);
+  string grpName = getName(tempId); 
+  if (grpName.compare("ERRORIdNotConnectToName")==0){
+		cout << "Error : can't list articles: newsgroup doesn't exist" << endl;
+		throw "No newsgroup with this id";
+	}
+	//find home/username path
+	struct passwd *pw = getpwuid(getuid());
+	const char *homedir = pw->pw_dir;
+	string homeDir(homedir);
+	//opendir needs full path, ~/Database/... does not work
+	string path(homeDir + "/Database/" + grpName);
+	struct dirent *entry;
+	DIR *dir = opendir(path.c_str());
+	//Mostly for finding errors
+	if (errno == ENOENT){
+		cout << "opendir failed: " << std::strerror(errno) << endl;
+	}
+
+	if (dir == NULL){
+		throw "cant open dir";
+	}
+
+  vector<Article> ret;
+  char dotfile[3] = {'.', '\0'};
+  char dotdotfile[3] = {'.', '.', '\0'};
+
+  while ((entry = readdir(dir)) != NULL) {
+    //this needs to be able to handle . and .. file
+    char* file = entry->d_name;
+    if (strcmp(file,dotfile) != 0 || strcmp(file,dotdotfile) != 0) {
+      int artId = std::atoi(entry->d_name);
+      string title; string auth; string text;
+      //requires c-string
+      std::ifstream inFile(entry->d_name);
+      getline(inFile,title);
+      getline(inFile,auth);
+      
+      string line;
+      while (inFile.good() && !inFile.eof()){
+			  getline(inFile, line);
+			  text += line + "\n";
+		  }
+      ret.emplace(ret.begin()+artId,title,auth,text,artId);
     }
+  }
+  closedir(dir);
+  return ret;
+}
 
-vector<Newsgroup> LiveDataBase::listNewsgroups() {
-
-}*/
+vector<Newsgroup> DiskDataBase::listNewsgroups() {
+  vector<Newsgroup> ret;
+  string txt = getId_txt();
+	std::stringstream ss(txt);
+	int tempId;
+	string word;
+	while (!ss.eof() && ss.good()){
+		ss>>word;
+		ss>>tempId;
+    ret.emplace(ret.begin()+tempId,word,tempId);
+	}
+  return ret;
+}

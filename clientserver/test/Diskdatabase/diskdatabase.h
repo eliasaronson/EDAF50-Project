@@ -14,6 +14,9 @@
 #include <cstring>
 #include <unistd.h>
 #include <pwd.h>
+#include <../MyServer/article.h>
+#include <../MyServer/newsgroup.h>
+#include <vector>
 
 using std::string;
 using std::istream;
@@ -23,20 +26,19 @@ public:
   DiskDataBase() = default;
   DiskDataBase(const DiskDataBase& d) = default;
   void addNewsgroup(const string& name);
-  void removeNewsgroup(size_t& groupId);
-  void addArticle(string& title, string& auth, string& text, size_t& grpId);
-  void removeArticle(size_t& groupId, size_t& artId);
-  //vector<Article> listArtikels(size_t&); 
-  //vector<Newsgroup> listNewsgroups();
+  void removeNewsgroup(int& groupId);
+  void addArticle(string& title, string& auth, string& text, int& grpId);
+  void removeArticle(int& groupId, int& artId);
+  vector<Article> listArtikels(const long long int& id); 
+  vector<Newsgroup> listNewsgroups();
 private:
-  size_t idNextNewsG = 0;
 };
 
 bool containsWord(const string& name);
 int currentIndex();
-string getName(size_t& groupId);
+string getName(int& groupId);
 string getId_txt();
-int nextArtId(size_t& grpId);
-bool containsArticle(size_t& grpId, size_t& artId);
+int nextArtId(int& grpId);
+bool containsArticle(int& grpId, int& artId);
 
 #endif

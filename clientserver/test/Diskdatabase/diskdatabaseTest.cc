@@ -7,7 +7,7 @@ using std::cout;
 using std::endl;
 
 int main(){
-	size_t tempid = 1;
+	int tempid = 1;
 	int returntempid = nextArtId(tempid);
 	cout << "next art id in main: " << returntempid << endl;
 	cout << "current index: " << currentIndex() << endl;
@@ -28,10 +28,10 @@ int main(){
 	d.addNewsgroup(c);
 	d.addNewsgroup(test);
 	cout << "In main after d.add..." << endl;
-	size_t id = 2;
+	int id = 2;
 	//d.removeNewsgroup(id);
 	d.addNewsgroup(e);
-	size_t grp3 = 3;
+	int grp3 = 3;
 	string title("title");
 	string auth("auth");
 	string text("text");
@@ -41,7 +41,7 @@ int main(){
 	d.addArticle(title,auth,text,grp3);
 	d.addArticle(title,auth,text,grp3);
 	d.addArticle(title,auth,text,grp3);
-	//d.removeArticle(grp3,grp3);
-	//d.removeArticle(grp3,id);
+	d.removeArticle(grp3,grp3);
+	d.removeArticle(grp3,id);
 	return 0;
 }
