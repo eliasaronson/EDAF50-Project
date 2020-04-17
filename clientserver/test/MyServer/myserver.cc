@@ -77,7 +77,7 @@ void createNG(MessageHandler& mess, DataBase& db){
 
 void deleteNG(MessageHandler& mess, DataBase& db){
     //Input
-    long long int id = mess.readNumber();
+    int id = mess.readNumber();
     mess.comEnd();
     //Output
     mess.writeInt(Protocol::ANS_DELETE_NG);
@@ -97,7 +97,7 @@ void deleteNG(MessageHandler& mess, DataBase& db){
 
 void listA(MessageHandler& mess, DataBase& db){
     //Input
-    long long int id = mess.readNumber();
+    int id = mess.readNumber();
     mess.comEnd();
     //Output
     mess.writeInt(Protocol::ANS_LIST_ART);
@@ -128,7 +128,7 @@ void listA(MessageHandler& mess, DataBase& db){
 
 void createA(MessageHandler& mess, DataBase& db){
     //Input
-    long long int id = mess.readNumber();
+    int id = mess.readNumber();
     string title = mess.readString();
     string auth = mess.readString();
     string text = mess.readString();
@@ -152,8 +152,8 @@ void createA(MessageHandler& mess, DataBase& db){
 
 void deleteA(MessageHandler& mess, DataBase& db){
     //Input
-    long long int idG = mess.readNumber();
-    long long int idA = mess.readNumber();
+    int idG = mess.readNumber();
+    int idA = mess.readNumber();
     mess.comEnd();
     //Output
     mess.writeInt(Protocol::ANS_DELETE_ART);
@@ -178,8 +178,8 @@ void deleteA(MessageHandler& mess, DataBase& db){
 
 void getA(MessageHandler& mess, DataBase& db){
     //Input
-    long long int idG = mess.readNumber();
-    long long int idA = mess.readNumber();
+    int idG = mess.readNumber();
+    int idA = mess.readNumber();
     mess.comEnd();
     //Output
     mess.writeInt(Protocol::ANS_GET_ART);

@@ -18,13 +18,13 @@ void LiveDataBase::addNewsgroup(string name) {
     }
 }
 
-void LiveDataBase::removeNewsgroup(long long int id) {
+void LiveDataBase::removeNewsgroup(int id) {
     std::remove_if(StoreNewsG.begin(), StoreNewsG.end(), [&id](Newsgroup ng) {
         return ng.getId() == id;
     });
 }
 
-void LiveDataBase::addArtikel(string title, string auth, string text, long long int id) {
+void LiveDataBase::addArtikel(string title, string auth, string text, int id) {
     auto it = std::find_if(StoreNewsG.begin(), StoreNewsG.end(), [&id](Newsgroup ng) {
         return ng.getId() == id;
     });
@@ -36,7 +36,7 @@ void LiveDataBase::addArtikel(string title, string auth, string text, long long 
     }
 }
 
-void LiveDataBase::removeArtikel(long long int NewsGID, long long int articID) {
+void LiveDataBase::removeArtikel(int NewsGID, int articID) {
     auto it = std::find_if(StoreNewsG.begin(), StoreNewsG.end(), [&NewsGID](Newsgroup ng) {
         return ng.getId() == NewsGID;
     });
@@ -48,7 +48,7 @@ void LiveDataBase::removeArtikel(long long int NewsGID, long long int articID) {
     }
 }
 
-vector<Article> LiveDataBase::listArtikels(long long int id) {
+vector<Article> LiveDataBase::listArtikels(int id) {
     auto it = std::find_if(StoreNewsG.begin(), StoreNewsG.end(), [&id](Newsgroup ng) {
         return ng.getId() == id;
     });
@@ -64,7 +64,7 @@ vector<Newsgroup> LiveDataBase::listNewsgroups() {
     return StoreNewsG;
 }
 
-Article LiveDataBase::getArtikel(long long int NewsGID, long long int articID) {
+Article LiveDataBase::getArtikel(int NewsGID, int articID) {
     auto it = std::find_if(StoreNewsG.begin(), StoreNewsG.end(), [&NewsGID](Newsgroup ng) {
         return ng.getId() == NewsGID;
     });

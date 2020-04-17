@@ -12,13 +12,13 @@ using std::string;
 class DataBase {
 public:
   virtual ~DataBase() = default;
-  virtual void addNewsgroup(string);
-  virtual void removeNewsgroup(long long int);
-  virtual void addArtikel(string, string, string, long long int);
-  virtual void removeArtikel(long long int, long long int);
-  virtual vector<Article> listArtikels(long long int); 
-  virtual vector<Newsgroup> listNewsgroups();
-  virtual Article getArtikel(long long int, long long int);
+  virtual void addNewsgroup(string) = 0;
+  virtual void removeNewsgroup(int) = 0;
+  virtual void addArtikel(string, string, string, int) = 0;
+  virtual void removeArtikel(int, int) = 0;
+  virtual vector<Article> listArtikels(int) = 0; 
+  virtual vector<Newsgroup> listNewsgroups() = 0;
+  virtual Article getArtikel(int, int) = 0;
 };
 
 #endif

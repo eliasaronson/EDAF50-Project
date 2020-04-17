@@ -15,15 +15,15 @@ public:
   LiveDataBase() = default;
   ~LiveDataBase() = default;
   void addNewsgroup(string) override;
-  void removeNewsgroup(long long int) override;
-  void addArtikel(string, string, string, long long int) override;
-  void removeArtikel(long long int, long long int) override;
-  vector<Article> listArtikels(long long int) override;
+  void removeNewsgroup(int) override;
+  void addArtikel(string, string, string, int) override;
+  void removeArtikel(int, int) override;
+  vector<Article> listArtikels(int) override;
   vector<Newsgroup> listNewsgroups() override;
-  Article getArtikel(long long int, long long int) override;
+  Article getArtikel(int, int) override;
 private:
   vector<Newsgroup> StoreNewsG; 
-  long long int idNextNewsG{};
+  int idNextNewsG{};
 };
 
 #endif
