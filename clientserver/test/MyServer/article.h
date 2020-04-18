@@ -9,6 +9,7 @@ using std::string;
 class Article {
 public:
   Article(string, string, string, long long int);
+  Article(const Article& art);
   string getTitle();
   string getAuthor();
   string getText();
