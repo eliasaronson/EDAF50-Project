@@ -235,7 +235,7 @@ int main(int argc, char* argv[]) {
 
     auto server = init(argc, argv);
     DataBase *db;
-    if (stoi(argv[2]) == 1) {
+    if (true) {
         db = new LiveDataBase();
     } else {
         // Create diskdatabase instead
