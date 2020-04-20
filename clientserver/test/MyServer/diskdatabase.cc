@@ -1,4 +1,5 @@
 #include "diskdatabase.h"
+#include "protocol.h"
 
 using std::string;
 using std::cout;
@@ -94,14 +95,15 @@ bool containsWord(const string& name){
 void DiskDataBase::addNewsgroup(const string& name) {
 	if (containsWord(name)){
 		cerr << "Error : Newsgroup already exists" << endl;
-		//throw "Newsgroup already exists";
+		throw Protocol::ERR_NG_ALREADY_EXISTS;
 	} else {
 		//Create the actual directory
 		string path("mkdir -p ~/Database/" + name);		
 		int status = system(path.c_str());
 		if (status == -1) {
-        		cerr << "Error :  " << strerror(errno) << endl; 
-			throw "Error creating folder";
+      //unexpected error creating folder
+     	cerr << "Error :  " << strerror(errno) << endl; 
+			throw std::runtime_error("Error creating folder");
 		}
 		else{
 			//Add name and id to id.txt
@@ -135,13 +137,13 @@ string getName(int& groupId){
 void DiskDataBase::removeNewsgroup(int& groupId) {
 	string name = getName(groupId);
 	if (name.compare("ERRORIdNotConnectToName")==0){
-		throw std::out_of_range("No Newsgroup with this id");
+		throw Protocol::ERR_NG_DOES_NOT_EXIST;
 	} else {
 		string path("rm -r ~/Database/" + name);
 		int status = system(path.c_str());
 		if (status == -1) {
-        		cerr << "Error :  " << strerror(errno) << endl; 
-			throw "Error removing folder";
+     	cerr << "Error :  " << strerror(errno) << endl; 
+			throw std::runtime_error("Error removing folder");
 		}
 		else{
 			//should be ~/Database/id.txt
@@ -214,11 +216,11 @@ int nextArtId(int& grpId){
 void DiskDataBase::addArticle(string& title, string& auth, string& text, int& grpId){
 	string grpName = getName(grpId);
 	if (grpName.compare("ERRORIdNotConnectToName")==0){
-		throw "No newsgroup with this id";
+		throw Protocol::ERR_NG_DOES_NOT_EXIST;
 	} else {
 		int artId = nextArtId(grpId);
 		if (artId == -1){
-			throw "can't open directory";
+			throw std::runtime_error("Can't open directory");
 		}
 		struct passwd *pw = getpwuid(getuid());
 		const char *homedir = pw->pw_dir;
@@ -283,17 +285,18 @@ void DiskDataBase::removeArticle(int& groupId, int& artId) {
 	string grpName = getName(groupId);
 	if (grpName.compare("ERRORIdNotConnectToName")==0){
 		cout << "Error : can't remove article: newsgroup doesn't exist" << endl;
-		throw "No newsgroup with this id";
+		throw Protocol::ERR_NG_DOES_NOT_EXIST;
 	} else if (containsArticle(groupId, artId) == NULL){
 		cout << "Error : can't remove article: article doesn't exists" << endl;
-		throw "No Article with this id";
+		throw Protocol::ERR_ART_DOES_NOT_EXIST;
 	}
 	else {
 		string command("rm ~/Database/" + grpName + "/" + std::to_string(artId));
 		int status = system(command.c_str());
 		if (status == -1){
-        		cerr << "Error :  " << strerror(errno) << endl; 
-			throw "Error removing article";
+      //unexpected error when removing directory
+     	cerr << "Error :  " << strerror(errno) << endl; 
+			throw std::runtime_error("Error removing article");
 		}
 	}
 }
@@ -303,7 +306,7 @@ vector<Article> DiskDataBase::listArtikels(const int& id) {
   string grpName = getName(tempId); 
   if (grpName.compare("ERRORIdNotConnectToName")==0){
 		cout << "Error : can't list articles: newsgroup doesn't exist" << endl;
-		throw "No newsgroup with this id";
+		throw Protocol::ERR_NG_DOES_NOT_EXIST;
 	}
 	//find home/username path
 	struct passwd *pw = getpwuid(getuid());
@@ -319,7 +322,7 @@ vector<Article> DiskDataBase::listArtikels(const int& id) {
 	}
 
 	if (dir == NULL){
-		throw "cant open dir";
+		throw std::runtime_error("can't open directory");
 	}
 
   vector<Article> ret;
@@ -367,7 +370,7 @@ Article DiskDataBase::getArtikel(int& grpId, int& artId){
   string grpName = getName(grpId); 
   if (grpName.compare("ERRORIdNotConnectToName")==0){
 		cout << "Error : can't list articles: newsgroup doesn't exist" << endl;
-		throw "No newsgroup with this id";
+		throw Protocol::ERR_NG_DOES_NOT_EXIST;
 	}
   Article* retp = containsArticle(grpId,artId);
   if (retp != NULL) {
@@ -376,6 +379,6 @@ Article DiskDataBase::getArtikel(int& grpId, int& artId){
     return cpy;
   }
   else {
-    throw "No article with this id";
+    throw Protocol::ERR_ART_DOES_NOT_EXIST;
   }
 }
