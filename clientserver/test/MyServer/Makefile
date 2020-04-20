@@ -26,7 +26,7 @@ PROGS = myserver
 all: $(PROGS)
 
 # Targets rely on implicit rules for compiling and linking
-myserver: article.o newsgroup.o livedatabase.o server.o connection.o messagehandler.o myserver.o 
+myserver: article.o newsgroup.o livedatabase.o server.o connection.o messagehandler.o myserver.o diskdatabase.o 
 
 # Phony targets
 .PHONY: all test clean distclean
