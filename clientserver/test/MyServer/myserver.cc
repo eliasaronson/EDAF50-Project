@@ -127,27 +127,36 @@ void listA(MessageHandler& mess, DataBase& db){
 }
 
 void createA(MessageHandler& mess, DataBase& db){
+    cout << "Creating article." << endl;
     //Input
     int id = mess.readNumber();
     string title = mess.readString();
     string auth = mess.readString();
     string text = mess.readString();
+    cout << "Input recvied." << endl;
     mess.comEnd();
+    cout << "End of command recvied." << endl;
     //Output
     mess.writeInt(Protocol::ANS_CREATE_ART);
 
+    cout << "Ansering command." << endl;
     try{
         db.addArtikel(title, auth, text, id); 
+        cout << "Testing, create article." << endl;
     } catch (exception& e) {
+        cout << "Could not create artikle." << endl;
         mess.writeInt(Protocol::ANS_NAK);
         mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
         mess.writeInt(Protocol::ANS_END);
+        cout << "Sending end of command." << endl;
         return;
     }
     
+    cout << "Article created." << endl;
     mess.writeInt(Protocol::ANS_ACK);
     
     mess.writeInt(Protocol::ANS_END);
+    cout << "Sending end of command." << endl;
 }
 
 void deleteA(MessageHandler& mess, DataBase& db){
