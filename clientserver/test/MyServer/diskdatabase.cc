@@ -103,7 +103,7 @@ void DiskDataBase::addNewsgroup(const string& name) {
 		if (status == -1) {
       //unexpected error creating folder
      	cerr << "Error :  " << strerror(errno) << endl; 
-			throw std::runtime_error("Error creating folder");
+			throw std::runtime_error(strerror(errno));
 		}
 		else{
 			//Add name and id to id.txt

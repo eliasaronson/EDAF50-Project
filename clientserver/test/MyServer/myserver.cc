@@ -5,6 +5,7 @@
 #include "protocol.h"
 #include "messagehandler.h"
 #include "livedatabase.h"
+#include "diskdatabase.h"
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -78,12 +79,22 @@ void createNG(MessageHandler& mess, DataBase& db){
     try{
         cout << "Creating Newsgroup in database." << endl;
         db.addNewsgroup(name);
+<<<<<<< HEAD
     } catch (exception& e) {
         cout << "Error occorded. Sending error messsage to client." << endl;
+=======
+    } catch (int& e) {
+>>>>>>> 9385b4b69ea2c2c0b6b4383fa0f24c287c6a6101
         mess.writeInt(Protocol::ANS_NAK);
-        mess.writeInt(Protocol::ERR_NG_ALREADY_EXISTS);
+        mess.writeInt(e);
         mess.writeInt(Protocol::ANS_END);
         return;
+    }
+    catch (exception& e)
+    {
+      mess.writeInt(Protocol::ANS_NAK);
+      mess.writeInt(Protocol::ANS_END);
+      return;
     }
 
     cout << "Newsgroup created." << endl;
@@ -101,11 +112,17 @@ void deleteNG(MessageHandler& mess, DataBase& db){
 
     try{
         db.removeNewsgroup(id);
-    } catch (exception& e) {
+    } catch (int& e) {
         mess.writeInt(Protocol::ANS_NAK);
-        mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
+        mess.writeInt(e);
         mess.writeInt(Protocol::ANS_END);
         return;
+    }
+    catch (exception& e)
+    {
+      mess.writeInt(Protocol::ANS_NAK);
+      mess.writeInt(Protocol::ANS_END);
+      return;
     }
 
     mess.writeInt(Protocol::ANS_ACK);
@@ -124,11 +141,17 @@ void listA(MessageHandler& mess, DataBase& db){
     //If works
     try{
         auto tmp = db.listArtikels(id);  
-    } catch (exception& e) {
+    } catch (int& e) {
         mess.writeInt(Protocol::ANS_NAK);
-        mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
+        mess.writeInt(e);
         mess.writeInt(Protocol::ANS_END);
         return;
+    }
+    catch (exception& e)
+    {
+      mess.writeInt(Protocol::ANS_NAK);
+      mess.writeInt(Protocol::ANS_END);
+      return;
     }
     
     auto tmp = db.listArtikels(id); //Quick fix. Come up with better solution. 
@@ -160,13 +183,19 @@ void createA(MessageHandler& mess, DataBase& db){
     try{
         db.addArtikel(title, auth, text, id); 
         cout << "Testing, create article." << endl;
-    } catch (exception& e) {
+    } catch (int& e) {
         cout << "Could not create artikle." << endl;
         mess.writeInt(Protocol::ANS_NAK);
-        mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
+        mess.writeInt(e);
         mess.writeInt(Protocol::ANS_END);
         cout << "Sending end of command." << endl;
         return;
+    }
+    catch (exception& e)
+    {
+      mess.writeInt(Protocol::ANS_NAK);
+      mess.writeInt(Protocol::ANS_END);
+      return;
     }
     
     cout << "Article created." << endl;
@@ -186,15 +215,17 @@ void deleteA(MessageHandler& mess, DataBase& db){
 
     try{
         db.removeArtikel(idG, idA);
-    } catch (exception& e) {
+    } catch (int& e) {
         mess.writeInt(Protocol::ANS_NAK);
-        if(e.what() == to_string(static_cast<int>(Protocol::ERR_NG_DOES_NOT_EXIST))){
-            mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
-        } else{
-            mess.writeInt(Protocol::ERR_ART_DOES_NOT_EXIST);
-        }
+        mess.writeInt(e);
         mess.writeInt(Protocol::ANS_END);
         return;
+    }
+    catch (exception& e)
+    {
+      mess.writeInt(Protocol::ANS_NAK);
+      mess.writeInt(Protocol::ANS_END);
+      return;
     }
     
     mess.writeInt(Protocol::ANS_ACK);
@@ -213,13 +244,9 @@ void getA(MessageHandler& mess, DataBase& db){
 
     try{
         Article a = db.getArtikel(idG, idA);
-    } catch (exception& e) {
+    } catch (int& e) {
         mess.writeInt(Protocol::ANS_NAK);
-        if(e.what() == to_string(static_cast<int>(Protocol::ERR_NG_DOES_NOT_EXIST))){
-            mess.writeInt(Protocol::ERR_NG_DOES_NOT_EXIST);
-        } else{
-            mess.writeInt(Protocol::ERR_ART_DOES_NOT_EXIST);
-        }
+        mess.writeInt(e);
         mess.writeInt(Protocol::ANS_END);
         return;
     }
