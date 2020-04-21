@@ -20,6 +20,7 @@ public:
   MessageHandler(const shared_ptr<Connection>&);
   int readNumber();
   string readString();
+  string readParam();
   Protocol usrCommand();
   void writeString(const string&);
   void writeInt(const int&);

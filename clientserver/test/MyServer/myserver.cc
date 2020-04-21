@@ -1,4 +1,3 @@
-/* myserver.cc: sample server program */
 #include "connection.h"
 #include "database.h"
 #include "connectionclosedexception.h"
@@ -37,42 +36,60 @@ Server init(int argc, char* argv[]) {
 }
 
 void ListNGs(MessageHandler& mess, DataBase& db){
+    cout << "Listing newsgroup command recived." << endl;
     //Input
     mess.comEnd();
     //Output
     mess.writeInt(Protocol::ANS_LIST_NG);
+    cout << "Awnserd command." << endl;
 
     auto tmp = db.listNewsgroups();  
+    cout << "Newsgoups recived from server. Number of NGs: " << tmp.size() << endl;
     mess.writeInt(tmp.size());
 
     for (auto x : tmp) {
-      string res = to_string(x.getId()) + " " + x.getName();
-      mess.writeString(res);
+      cout << "Sending newsgroups." << endl;
+      int id = x.getId();
+      string name = x.getName();
+      cout << id << " " << name << endl;
+
+      mess.writeInt(id);
+      mess.writeString(name);
     }
     
     mess.writeInt(Protocol::ANS_END);
+    cout << "Awnsered list newsgroups. Returing to standby." << endl;
 }
 
 void createNG(MessageHandler& mess, DataBase& db){
 
+    cout << "Creating Newsgroup." << endl;
+    
     //Input
-    string name = mess.readString();
+    string name = mess.readParam();
+    cout << "Input recived." << endl;
     mess.comEnd();
 
     //Output
     mess.writeInt(Protocol::ANS_CREATE_NG);
 
+    cout << "Anwsering command." << endl;
+
     try{
+        cout << "Creating Newsgroup in database." << endl;
         db.addNewsgroup(name);
     } catch (exception& e) {
+        cout << "Error occorded. Sending error messsage to client." << endl;
         mess.writeInt(Protocol::ANS_NAK);
         mess.writeInt(Protocol::ERR_NG_ALREADY_EXISTS);
         mess.writeInt(Protocol::ANS_END);
         return;
     }
 
+    cout << "Newsgroup created." << endl;
     mess.writeInt(Protocol::ANS_ACK);
     mess.writeInt(Protocol::ANS_END);
+    cout << "Anwser sent. Waiting for new command." << endl;
 }
 
 void deleteNG(MessageHandler& mess, DataBase& db){
@@ -218,8 +235,10 @@ void getA(MessageHandler& mess, DataBase& db){
 }
 
 void case_handler(MessageHandler& mess, DataBase& db) {
-    string resualt;
-    switch (mess.usrCommand())
+    cout << "Case handler called." << endl;
+    auto m = mess.usrCommand();
+    cout << "Message recived:" << static_cast<int>(m) << endl;
+    switch (m)
     {
       case Protocol::COM_LIST_NG: ListNGs(mess, db);
         break;
@@ -241,26 +260,33 @@ void case_handler(MessageHandler& mess, DataBase& db) {
 }
 
 int main(int argc, char* argv[]) {
+    cout << "Startring server." << endl;
 
     auto server = init(argc, argv);
     DataBase *db;
     if (true) {
+        cout << "Creating live database." << endl;
         db = new LiveDataBase();
     } else {
         // Create diskdatabase instead
+        cout << "Creating disk database." << endl;
         db = new LiveDataBase();
     }
     
     
 
     while (true) {
+        cout << endl;
+        cout << "Waiting for server activity." << endl;
         auto conn = server.waitForActivity();
+        cout << "Server active." << endl;
 
         MessageHandler mess(conn);
 
         if (conn != nullptr) {
             try {
                 //Handle message
+                cout << "Sending message to case handler." << endl;
                 case_handler(mess, *db);
             } catch (ConnectionClosedException&) {
                 server.deregisterConnection(conn);

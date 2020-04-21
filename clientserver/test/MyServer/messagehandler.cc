@@ -12,7 +12,7 @@
 
 using namespace std;
 
-MessageHandler::MessageHandler(const shared_ptr<Connection>& con) : conn(con){}
+MessageHandler::MessageHandler(const shared_ptr<Connection>& con) : conn(con) {}
 /*
 * Read an integer from a client.
 */
@@ -24,49 +24,86 @@ int MessageHandler::readNumber() {
     return (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4;
 }
 
-string MessageHandler::readString(){
-    string res{};  
+string MessageHandler::readString() {
+    cout << "Reading string." << endl;
+    string res{};
+    char c;
 
-    char c = conn->read();
-    while(c != '$'){
-      res += c;
-    } 
+    cout << "Information recived." << endl;
+    while((c = conn->read()) != '$') {
+        cout << "Char: " << c << endl;
+        res += c;
+    }
+
+    cout << "Information translated to string: " << res << endl;
 
     return res;
 }
 
-Protocol MessageHandler::usrCommand(){
-  unsigned char byte1 = conn->read();
-  unsigned char byte2 = conn->read();
-  unsigned char byte3 = conn->read();
-  unsigned char byte4 = conn->read();
-  int tmp =  (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4;
-  return static_cast<Protocol>(tmp);
+string MessageHandler::readParam() {
+    cout << "Reading string." << endl;
+
+    string res{};
+    if(usrCommand() == Protocol::PAR_STRING) {
+        cout << "String input recived." << endl;
+        int N = readNumber();
+        cout << "Numbers of characters in input: " << N << endl;
+        char c;
+
+        cout << "Information recived." << endl;
+        for(int i = 0; i < N; i++) {
+            c = conn->read();
+            cout << "Char: " << c << endl;
+            res += c;
+        }
+
+        cout << "Information translated to string: " << res << endl;
+
+    } else if(usrCommand() == Protocol::PAR_NUM) {
+        cout << "Int input recived." << res << endl;
+        res = to_string(readNumber());
+    } else {
+        throw exception();
+    }
+
+    return res;
+}
+
+Protocol MessageHandler::usrCommand() {
+    cout << "Reading user command." << endl;
+    char c = conn->read();
+    cout << "Recived: " << static_cast<int>(c) << endl;
+    return static_cast<Protocol>(c);
 }
 /*
 * Send a string to a client.
 */
 void MessageHandler::writeString(const string& s) {
+    int n = s.size();
+    cout << "String length: " << n << endl;
+    writeInt(n);
+
     for (char c : s) {
         conn->write(c);
     }
-    conn->write('$');
 }
 
-void MessageHandler::writeInt(const int& i){
-  conn->write((i >> 24) & 0xFF);
-  conn->write((i >> 16) & 0xFF);
-  conn->write((i >> 8) & 0xFF);
-  conn->write((i) & 0xFF);
+void MessageHandler::writeInt(const int& i) {
+    conn->write((i >> 24) & 0xFF);
+    conn->write((i >> 16) & 0xFF);
+    conn->write((i >> 8) & 0xFF);
+    conn->write((i) & 0xFF);
 }
 
-void MessageHandler::writeInt(const Protocol& p){
-  writeInt(static_cast<int>(p));
+void MessageHandler::writeInt(const Protocol& p) {
+    writeInt(static_cast<int>(p));
 }
 
-void MessageHandler::comEnd(){
-  int com = readNumber();  
-  if(com != static_cast<int>(Protocol::COM_END)){
-    throw exception();
-  }
+void MessageHandler::comEnd() {
+    cout << "Reading message for comEnd." << endl;
+    auto com = usrCommand();
+    cout << "Checking for end of message." << endl;
+    if(com != (Protocol::COM_END)) {
+        throw exception();
+    }
 }
