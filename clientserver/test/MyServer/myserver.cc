@@ -79,12 +79,8 @@ void createNG(MessageHandler& mess, DataBase& db){
     try{
         cout << "Creating Newsgroup in database." << endl;
         db.addNewsgroup(name);
-<<<<<<< HEAD
-    } catch (exception& e) {
-        cout << "Error occorded. Sending error messsage to client." << endl;
-=======
     } catch (int& e) {
->>>>>>> 9385b4b69ea2c2c0b6b4383fa0f24c287c6a6101
+        cout << "Error occorded. Sending error messsage to client." << endl;
         mess.writeInt(Protocol::ANS_NAK);
         mess.writeInt(e);
         mess.writeInt(Protocol::ANS_END);
