@@ -40,11 +40,17 @@ string MessageHandler::readString() {
     return res;
 }
 
+//Reads parameters according to messaging protocol.
+//string_p: PAR_STRING N char1 char2 ... charN  // N is the number of characters
+//num_p: PAR_NUM N                              // N is the number
+//
+//Maybe change return type to template class??
 string MessageHandler::readParam() {
     cout << "Reading string." << endl;
 
     string res{};
-    if(usrCommand() == Protocol::PAR_STRING) {
+    Protocol IorS = usrCommand();
+    if(IorS == Protocol::PAR_STRING) {
         cout << "String input recived." << endl;
         int N = readNumber();
         cout << "Numbers of characters in input: " << N << endl;
@@ -59,11 +65,12 @@ string MessageHandler::readParam() {
 
         cout << "Information translated to string: " << res << endl;
 
-    } else if(usrCommand() == Protocol::PAR_NUM) {
+    } else if(IorS == Protocol::PAR_NUM) {
         cout << "Int input recived." << res << endl;
         res = to_string(readNumber());
     } else {
-        throw exception();
+        string err = "Error in message: " + to_string(static_cast<int>(IorS)) + " when a int-41 or string-40 parameter was expected!"; 
+        throw runtime_error(err);
     }
 
     return res;
@@ -81,7 +88,8 @@ Protocol MessageHandler::usrCommand() {
 void MessageHandler::writeString(const string& s) {
     int n = s.size();
     cout << "String length: " << n << endl;
-    writeInt(n);
+    writeInt(Protocol::PAR_STRING);
+    directIntWriter(n);
 
     for (char c : s) {
         conn->write(c);
@@ -89,6 +97,11 @@ void MessageHandler::writeString(const string& s) {
 }
 
 void MessageHandler::writeInt(const int& i) {
+    writeInt(Protocol::PAR_NUM);
+    directIntWriter(i);
+}
+
+void MessageHandler::directIntWriter(const int& i) {
     conn->write((i >> 24) & 0xFF);
     conn->write((i >> 16) & 0xFF);
     conn->write((i >> 8) & 0xFF);
@@ -96,7 +109,7 @@ void MessageHandler::writeInt(const int& i) {
 }
 
 void MessageHandler::writeInt(const Protocol& p) {
-    writeInt(static_cast<int>(p));
+    conn->write(static_cast<unsigned char>(p));
 }
 
 void MessageHandler::comEnd() {
@@ -104,6 +117,7 @@ void MessageHandler::comEnd() {
     auto com = usrCommand();
     cout << "Checking for end of message." << endl;
     if(com != (Protocol::COM_END)) {
-        throw exception();
+        writeInt(Protocol::COM_END);
+        throw runtime_error("Error in message. End of message not recived when expected!");
     }
 }

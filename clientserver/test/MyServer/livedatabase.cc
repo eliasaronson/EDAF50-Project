@@ -20,9 +20,16 @@ void LiveDataBase::addNewsgroup(string name) {
 
 //Add throw if newsgroyp not removed
 void LiveDataBase::removeNewsgroup(int id) {
-    std::remove_if(StoreNewsG.begin(), StoreNewsG.end(), [&id](Newsgroup ng) {
+     auto it = std::find_if(StoreNewsG.begin(), StoreNewsG.end(), [&id](Newsgroup ng) {
         return ng.getId() == id;
     });
+    if (it == StoreNewsG.end()) {
+        int err = static_cast<int>(Protocol::ERR_NG_DOES_NOT_EXIST);
+        throw (err);
+    } else {
+        StoreNewsG.erase(it);
+    }
+ 
 }
 
 void LiveDataBase::addArtikel(string title, string auth, string text, int id) {

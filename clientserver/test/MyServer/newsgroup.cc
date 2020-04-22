@@ -20,7 +20,7 @@ void Newsgroup::removeArticle(long long int id) {
     });
     if (it == store.end()) {
         int err = static_cast<int>(Protocol::ERR_ART_DOES_NOT_EXIST);
-        throw std::to_string(err);
+        throw (err);
     } else {
         store.erase(it);
     }
@@ -45,7 +45,7 @@ Article Newsgroup::getArticle(long long int id) {
     });
     if (it == store.end()) {
         int err = static_cast<int>(Protocol::ERR_ART_DOES_NOT_EXIST);
-        throw std::to_string(err);
+        throw (err);
     } else {
         return *it;
     }

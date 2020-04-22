@@ -82,7 +82,7 @@ void createNG(MessageHandler& mess, DataBase& db){
     } catch (int& e) {
         cout << "Error occorded. Sending error messsage to client." << endl;
         mess.writeInt(Protocol::ANS_NAK);
-        mess.writeInt(e);
+        mess.writeInt(static_cast<Protocol>(e));
         mess.writeInt(Protocol::ANS_END);
         return;
     }
@@ -100,35 +100,40 @@ void createNG(MessageHandler& mess, DataBase& db){
 }
 
 void deleteNG(MessageHandler& mess, DataBase& db){
+    cout << "Delete newsgroup called." << endl;
     //Input
-    int id = mess.readNumber();
+    int id = stoi(mess.readParam());
+    cout << "Recived Id: " << id << endl;
     mess.comEnd();
     //Output
     mess.writeInt(Protocol::ANS_DELETE_NG);
 
     try{
+        cout << "Trying to remove newsgroup." << endl;
         db.removeNewsgroup(id);
     } catch (int& e) {
+        cout << "No newsgroup deleted. Sending error code." << endl;
         mess.writeInt(Protocol::ANS_NAK);
-        mess.writeInt(e);
+        mess.writeInt(static_cast<Protocol>(e));
         mess.writeInt(Protocol::ANS_END);
         return;
-    }
-    catch (exception& e)
-    {
+    } catch (exception& e) {
       mess.writeInt(Protocol::ANS_NAK);
       mess.writeInt(Protocol::ANS_END);
       return;
     }
 
+    cout << "Delete done." << endl;
     mess.writeInt(Protocol::ANS_ACK);
     mess.writeInt(Protocol::ANS_END);
 }
 
 void listA(MessageHandler& mess, DataBase& db){
+    cout << "List articles called." << endl;
     //Input
-    int id = mess.readNumber();
+    int id = stoi(mess.readParam());
     mess.comEnd();
+    cout << "Recived Id: " << id << endl;
     //Output
     mess.writeInt(Protocol::ANS_LIST_ART);
 
@@ -136,15 +141,18 @@ void listA(MessageHandler& mess, DataBase& db){
     
     //If works
     try{
+        cout << "Trying to get artikles." << endl;
         auto tmp = db.listArtikels(id);  
     } catch (int& e) {
+        cout << "No, artikels recived. Sending error code to client." << endl;
         mess.writeInt(Protocol::ANS_NAK);
-        mess.writeInt(e);
+        mess.writeInt(static_cast<Protocol>(e));
         mess.writeInt(Protocol::ANS_END);
         return;
     }
     catch (exception& e)
     {
+      cout << "Unexpected error occured!" << endl;
       mess.writeInt(Protocol::ANS_NAK);
       mess.writeInt(Protocol::ANS_END);
       return;
@@ -152,11 +160,15 @@ void listA(MessageHandler& mess, DataBase& db){
     
     auto tmp = db.listArtikels(id); //Quick fix. Come up with better solution. 
 
+    cout << "Artkales recived. Sending..." << endl;
     mess.writeInt(Protocol::ANS_ACK);
     mess.writeInt(tmp.size());
     for (auto x : tmp) {
-      string res = to_string(x.getId()) + " " + x.getTitle();
-      mess.writeString(res);
+      int id = x.getId();
+      string title = x.getTitle();
+      cout << "Sending: " << id << " " << title << endl;
+      mess.writeInt(id);
+      mess.writeString(title);
     }
     
     mess.writeInt(Protocol::ANS_END);
@@ -165,10 +177,10 @@ void listA(MessageHandler& mess, DataBase& db){
 void createA(MessageHandler& mess, DataBase& db){
     cout << "Creating article." << endl;
     //Input
-    int id = mess.readNumber();
-    string title = mess.readString();
-    string auth = mess.readString();
-    string text = mess.readString();
+    int id = stoi(mess.readParam());
+    string title = mess.readParam();
+    string auth = mess.readParam();
+    string text = mess.readParam();
     cout << "Input recvied." << endl;
     mess.comEnd();
     cout << "End of command recvied." << endl;
@@ -182,7 +194,7 @@ void createA(MessageHandler& mess, DataBase& db){
     } catch (int& e) {
         cout << "Could not create artikle." << endl;
         mess.writeInt(Protocol::ANS_NAK);
-        mess.writeInt(e);
+        mess.writeInt(static_cast<Protocol>(e));
         mess.writeInt(Protocol::ANS_END);
         cout << "Sending end of command." << endl;
         return;
@@ -202,37 +214,43 @@ void createA(MessageHandler& mess, DataBase& db){
 }
 
 void deleteA(MessageHandler& mess, DataBase& db){
+    cout << "Delete artikle called." << endl;
     //Input
-    int idG = mess.readNumber();
-    int idA = mess.readNumber();
+    int idG = stoi(mess.readParam());
+    int idA = stoi(mess.readParam());
+    cout << "Inputs recived: " << idG << " " << idA << endl;
     mess.comEnd();
     //Output
     mess.writeInt(Protocol::ANS_DELETE_ART);
 
     try{
+        cout << "Trying to remove article." << endl;
         db.removeArtikel(idG, idA);
     } catch (int& e) {
+        cout << "Remove failed. Sending error code." << endl;
         mess.writeInt(Protocol::ANS_NAK);
-        mess.writeInt(e);
+        mess.writeInt(static_cast<Protocol>(e));
         mess.writeInt(Protocol::ANS_END);
         return;
     }
     catch (exception& e)
     {
+      cout << "Remove failed for unkown reason." << endl;
       mess.writeInt(Protocol::ANS_NAK);
       mess.writeInt(Protocol::ANS_END);
       return;
     }
     
     mess.writeInt(Protocol::ANS_ACK);
+    cout << "Remove succesfull." << endl;
             
     mess.writeInt(Protocol::ANS_END);
 }
 
 void getA(MessageHandler& mess, DataBase& db){
     //Input
-    int idG = mess.readNumber();
-    int idA = mess.readNumber();
+    int idG = stoi(mess.readParam());
+    int idA = stoi(mess.readParam());
     mess.comEnd();
     //Output
     mess.writeInt(Protocol::ANS_GET_ART);
@@ -242,7 +260,7 @@ void getA(MessageHandler& mess, DataBase& db){
         Article a = db.getArtikel(idG, idA);
     } catch (int& e) {
         mess.writeInt(Protocol::ANS_NAK);
-        mess.writeInt(e);
+        mess.writeInt(static_cast<Protocol>(e));
         mess.writeInt(Protocol::ANS_END);
         return;
     }
@@ -314,6 +332,9 @@ int main(int argc, char* argv[]) {
             } catch (ConnectionClosedException&) {
                 server.deregisterConnection(conn);
                 cout << "Client closed connection" << endl;
+            } catch (exception& e) {
+              cout << "\033[1;31mError: \033[0m";
+              cout << e.what() << endl;
             }
         } else {
             conn = make_shared<Connection>();

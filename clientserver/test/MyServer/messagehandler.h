@@ -25,6 +25,7 @@ public:
   void writeString(const string&);
   void writeInt(const int&);
   void writeInt(const Protocol&);
+  void directIntWriter(const int&);
   void comEnd();
 private:
   const shared_ptr<Connection>& conn;
