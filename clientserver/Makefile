@@ -11,41 +11,34 @@ DEPFLAGS = -MT $@ -MMD -MP -MF $*.d
 # if you use clang++ and wish to use libc++ instead of GNU's libstdc++.
 # -g is for debugging.
 CPPFLAGS =  -std=c++11 -I.
-CXXFLAGS =  -O2 -Wall -Wextra -pedantic-errors -Wold-style-cast 
-CXXFLAGS += -std=c++11 
+CXXFLAGS =  -O0 -Wall -Wextra -pedantic-errors -Wold-style-cast
+CXXFLAGS += -std=c++11
 CXXFLAGS += -g
 CXXFLAGS += $(DEPFLAGS)
-LDFLAGS =   -g 
+LDFLAGS =   -g
 #CPPFLAGS += -stdlib=libc++
 #CXXFLAGS += -stdlib=libc++
 #LDFLAGS +=  -stdlib=libc++
 
 # Targets
+PROGS = myserver 
 
-all: libclientserver.a
-	make -C test
+all: $(PROGS)
 
-# Create the library; ranlib is for Darwin (OS X) and maybe other systems.
-# Doesn't seem to do any damage on other systems.
-
-libclientserver.a: connection.o server.o
-	ar rv libclientserver.a  connection.o server.o
-	ranlib libclientserver.a
+# Targets rely on implicit rules for compiling and linking
+myserver: article.o newsgroup.o livedatabase.o server.o connection.o messagehandler.o casehandler.o myserver.o diskdatabase.o 
 
 # Phony targets
-.PHONY: all clean distclean
-
-SRC = $(wildcard *.cc)
+.PHONY: all test clean distclean
 
 # Standard clean
 clean:
-	rm $(SRC:.cc=.o) $(PROGS)
+	rm -f *.o $(PROGS)
 
 distclean: clean
-	-rm libclientserver.a
-	-rm $(SRC:.cc=.d) 
-	make -C test distclean
+	rm *.d
 
 
 # Include the *.d files
+SRC = $(wildcard *.cc)
 -include $(SRC:.cc=.d)

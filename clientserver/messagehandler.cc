@@ -69,7 +69,7 @@ string MessageHandler::readParam() {
         cout << "Int input recived." << res << endl;
         res = to_string(readNumber());
     } else {
-        string err = "Error in message: " + to_string(static_cast<int>(IorS)) + " when a int-41 or string-40 parameter was expected!"; 
+        string err = "Error in message: " + to_string(static_cast<int>(IorS)) + " when a int-41 or string-40 parameter was expected!";
         throw runtime_error(err);
     }
 
