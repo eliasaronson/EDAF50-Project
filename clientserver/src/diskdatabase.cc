@@ -19,10 +19,10 @@ string getDbDir(){
   return ret;
 }
 
-//Should only be called if id is closed(?)
+//Should only be called if id.txt is closed(?)
 int currentIndex(){
-	//should be ~/Database/id
-	std::ifstream fin("id");
+	//should be ~/Database/id.txt
+	std::ifstream fin("id.txt");
 	int id;
 	if (fin.is_open()){
 		fin.seekg(-1,std::ios_base::end);			//go to one spot before the EOF
@@ -50,15 +50,15 @@ int currentIndex(){
 		//std::stringstream ss(lastLine);
 		//string temp;
 		//ss >> temp >> id;
-//		cout << "The last line in id is: " << lastLine << endl;
+//		cout << "The last line in id.txt is: " << lastLine << endl;
 		fin.close();
 	}
 	return id;
 }
 
-string getid(){
-	//should be ~/Database/id
-	std::ifstream file("id");
+string getId_txt(){
+	//should be ~/Database/id.txt
+	std::ifstream file("id.txt");
 	string txt;
 	string line;
 	if (file.is_open()){
@@ -72,7 +72,7 @@ string getid(){
 }
 
 bool containsWord(const string& name){
-	string txt = getid();
+	string txt = getId_txt();
 	cout << "txt: " << txt << endl;
 	std::stringstream ss(txt);
 	int tempId;
@@ -106,10 +106,10 @@ void DiskDataBase::addNewsgroup(const string& name) {
 			throw std::runtime_error(strerror(errno));
 		}
 		else{
-			//Add name and id to id
+			//Add name and id to id.txt
 			int nextId = currentIndex()+1;
-			//should be ~/Database/id
-			std::ofstream outFile("id",std::ios_base::app);
+			//should be ~/Database/id.txt
+			std::ofstream outFile("id.txt",std::ios_base::app);
 			outFile << name + " " << nextId << "\n";
 			outFile.close();
 			//For debugging
@@ -120,7 +120,7 @@ void DiskDataBase::addNewsgroup(const string& name) {
 }
 
 string getName(int& groupId){
-	std::stringstream ss(getid());
+	std::stringstream ss(getId_txt());
 	int tempId;
 	string word;
 	while (!ss.eof() && ss.good()){
@@ -146,11 +146,11 @@ void DiskDataBase::removeNewsgroup(int& groupId) {
 			throw std::runtime_error("Error removing folder");
 		}
 		else{
-			//should be ~/Database/id
-			std::ifstream inFile("id");
+			//should be ~/Database/id.txt
+			std::ifstream inFile("id.txt");
 			//should be ~/Database/temp.txt
 			std::ofstream outFile("temp.txt", std::ofstream::out);
-			std::stringstream ss(getid());
+			std::stringstream ss(getId_txt());
 			int tempId;
 			string word;
 			while (!ss.eof() && ss.good()){
@@ -169,10 +169,10 @@ void DiskDataBase::removeNewsgroup(int& groupId) {
 			inFile.close();
 			outFile.close();
 
-			//should be ~/Database/id
-			remove("id");
+			//should be ~/Database/id.txt
+			remove("id.txt");
 			//should be ~/Database/temp.txt
-			rename("temp.txt", "id");
+			rename("temp.txt", "id.txt");
 		}
 	}
 }
@@ -354,7 +354,7 @@ vector<Article> DiskDataBase::listArtikels(const int& id) {
 
 vector<Newsgroup> DiskDataBase::listNewsgroups() {
   vector<Newsgroup> ret;
-  string txt = getid();
+  string txt = getId_txt();
 	std::stringstream ss(txt);
 	int tempId;
 	string word;
