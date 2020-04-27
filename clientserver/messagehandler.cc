@@ -12,15 +12,16 @@
 
 using namespace std;
 
-MessageHandler::MessageHandler(const shared_ptr<Connection>& con) : conn(con) {}
+//MessageHandler::MessageHandler(const shared_ptr<Connection>& con) : conn(con) {}
+MessageHandler::MessageHandler(Connection& con) : conn(con) {}
 /*
 * Read an integer from a client.
 */
 int MessageHandler::readNumber() {
-    unsigned char byte1 = conn->read();
-    unsigned char byte2 = conn->read();
-    unsigned char byte3 = conn->read();
-    unsigned char byte4 = conn->read();
+    unsigned char byte1 = conn.read();
+    unsigned char byte2 = conn.read();
+    unsigned char byte3 = conn.read();
+    unsigned char byte4 = conn.read();
     return (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4;
 }
 
@@ -30,7 +31,7 @@ string MessageHandler::readString() {
     char c;
 
     cout << "Information recived." << endl;
-    while((c = conn->read()) != '$') {
+    while((c = conn.read()) != '$') {
         cout << "Char: " << c << endl;
         res += c;
     }
@@ -58,7 +59,7 @@ string MessageHandler::readParam() {
 
         cout << "Information recived." << endl;
         for(int i = 0; i < N; i++) {
-            c = conn->read();
+            c = conn.read();
             cout << "Char: " << c << endl;
             res += c;
         }
@@ -78,7 +79,7 @@ string MessageHandler::readParam() {
 
 Protocol MessageHandler::usrCommand() {
     cout << "Reading user command." << endl;
-    char c = conn->read();
+    char c = conn.read();
     cout << "Recived: " << static_cast<int>(c) << endl;
     return static_cast<Protocol>(c);
 }
@@ -92,7 +93,7 @@ void MessageHandler::writeString(const string& s) {
     directIntWriter(n);
 
     for (char c : s) {
-        conn->write(c);
+        conn.write(c);
     }
 }
 
@@ -102,14 +103,14 @@ void MessageHandler::writeInt(const int& i) {
 }
 
 void MessageHandler::directIntWriter(const int& i) {
-    conn->write((i >> 24) & 0xFF);
-    conn->write((i >> 16) & 0xFF);
-    conn->write((i >> 8) & 0xFF);
-    conn->write((i) & 0xFF);
+    conn.write((i >> 24) & 0xFF);
+    conn.write((i >> 16) & 0xFF);
+    conn.write((i >> 8) & 0xFF);
+    conn.write((i) & 0xFF);
 }
 
 void MessageHandler::writeInt(const Protocol& p) {
-    conn->write(static_cast<unsigned char>(p));
+    conn.write(static_cast<unsigned char>(p));
 }
 
 void MessageHandler::comEnd() {

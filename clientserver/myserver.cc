@@ -58,9 +58,10 @@ int main(int argc, char* argv[]) {
         auto conn = server.waitForActivity();
         cout << "Server active." << endl;
 
-        MessageHandler mess(conn);
 
         if (conn != nullptr) {
+
+        	MessageHandler mess(*conn.get());
             try {
                 //Handle message
                 cout << "Sending message to case handler." << endl;
