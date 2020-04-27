@@ -21,8 +21,9 @@ string getDbDir(){
 
 //Should only be called if id.txt is closed(?)
 int currentIndex(){
-	//should be ~/Database/id.txt
-	std::ifstream fin("id.txt");
+	//should be .../Database/id.txt
+  string path(getDbDir() + "id.txt");
+	std::ifstream fin(path.c_str());
 	int id;
 	if (fin.is_open()){
 		fin.seekg(-1,std::ios_base::end);			//go to one spot before the EOF
@@ -47,10 +48,6 @@ int currentIndex(){
 		string lastLine;
 		getline(fin,lastLine);
 		id = std::stoi(lastLine);					//For some reason lastline is only index on last row
-		//std::stringstream ss(lastLine);
-		//string temp;
-		//ss >> temp >> id;
-//		cout << "The last line in id.txt is: " << lastLine << endl;
 		fin.close();
 	}
 	return id;
@@ -58,7 +55,8 @@ int currentIndex(){
 
 string getId_txt(){
 	//should be ~/Database/id.txt
-	std::ifstream file("id.txt");
+  string path(getDbDir() + "id.txt");
+	std::ifstream file(path.c_str());
 	string txt;
 	string line;
 	if (file.is_open()){
@@ -98,7 +96,7 @@ void DiskDataBase::addNewsgroup(const string& name) {
 		throw Protocol::ERR_NG_ALREADY_EXISTS;
 	} else {
 		//Create the actual directory
-		string path("mkdir -p ~/Database/" + name);		
+		string path("mkdir -p ../Database/" + name);		
 		int status = system(path.c_str());
 		if (status == -1) {
       //unexpected error creating folder
@@ -109,7 +107,8 @@ void DiskDataBase::addNewsgroup(const string& name) {
 			//Add name and id to id.txt
 			int nextId = currentIndex()+1;
 			//should be ~/Database/id.txt
-			std::ofstream outFile("id.txt",std::ios_base::app);
+      string path2(getDbDir() + "id.txt");
+			std::ofstream outFile(path2.c_str(),std::ios_base::app);
 			outFile << name + " " << nextId << "\n";
 			outFile.close();
 			//For debugging
@@ -139,17 +138,19 @@ void DiskDataBase::removeNewsgroup(int& groupId) {
 	if (name.compare("ERRORIdNotConnectToName")==0){
 		throw Protocol::ERR_NG_DOES_NOT_EXIST;
 	} else {
-		string path("rm -r ~/Database/" + name);
+		string path("rm -r ../Database/" + name);
 		int status = system(path.c_str());
 		if (status == -1) {
      	cerr << "Error :  " << strerror(errno) << endl; 
 			throw std::runtime_error("Error removing folder");
 		}
 		else{
-			//should be ~/Database/id.txt
-			std::ifstream inFile("id.txt");
-			//should be ~/Database/temp.txt
-			std::ofstream outFile("temp.txt", std::ofstream::out);
+			//should be ../Database/id.txt
+      string path2(getDbDir() + "id.txt");
+			std::ifstream inFile(path2.c_str());
+			//should be ../Database/temp.txt
+      string path3(getDbDir() + "temp.txt");
+			std::ofstream outFile(path3.c_str(), std::ofstream::out);
 			std::stringstream ss(getId_txt());
 			int tempId;
 			string word;
@@ -169,10 +170,10 @@ void DiskDataBase::removeNewsgroup(int& groupId) {
 			inFile.close();
 			outFile.close();
 
-			//should be ~/Database/id.txt
-			remove("id.txt");
-			//should be ~/Database/temp.txt
-			rename("temp.txt", "id.txt");
+			//should be ../Database/id.txt
+			remove(path2.c_str());
+			//should be ../Database/temp.txt
+			rename(path3.c_str(), path2.c_str());
 		}
 	}
 }
@@ -180,12 +181,8 @@ void DiskDataBase::removeNewsgroup(int& groupId) {
 //returns the highest file number(article id)+1 in the directory with id grpId
 int nextArtId(int& grpId){
 	string grpName = getName(grpId); 
-	//find home/username path
-	struct passwd *pw = getpwuid(getuid());
-	const char *homedir = pw->pw_dir;
-	string homeDir(homedir);
 	//opendir needs full path, ~/Database/... does not work
-	string path(homeDir + "/Database/" + grpName);
+	string path(getDbDir() + "/Database/" + grpName);
 	struct dirent *entry;
 	DIR *dir = opendir(path.c_str());
 	//Mostly for finding errors
@@ -222,10 +219,7 @@ void DiskDataBase::addArticle(string& title, string& auth, string& text, int& gr
 		if (artId == -1){
 			throw std::runtime_error("Can't open directory");
 		}
-		struct passwd *pw = getpwuid(getuid());
-		const char *homedir = pw->pw_dir;
-		string homeDir(homedir);
-		string path(homeDir + "/Database/" + grpName + "/" + std::to_string(artId));
+		string path(getDbDir() + "/Database/" + grpName + "/" + std::to_string(artId));
 		std::ofstream outFile(path);
 		if (!outFile.is_open()){
 			cout << "Error : outFile isn't open" << endl;
@@ -240,13 +234,8 @@ void DiskDataBase::addArticle(string& title, string& auth, string& text, int& gr
 Article* containsArticle(int& grpId, int& artId){
 	string grpName = getName(grpId); 
 
-	//find home/username path
-	struct passwd *pw = getpwuid(getuid());
-	const char *homedir = pw->pw_dir;
-	string homeDir(homedir);
-
 	//opendir needs full path, ~/Database/... does not work
-	string path(homeDir + "/Database/" + grpName);
+	string path(getDbDir() + "/Database/" + grpName);
 	struct dirent *entry;
 	DIR *dir = opendir(path.c_str());
 
@@ -308,12 +297,8 @@ vector<Article> DiskDataBase::listArtikels(const int& id) {
 		cout << "Error : can't list articles: newsgroup doesn't exist" << endl;
 		throw Protocol::ERR_NG_DOES_NOT_EXIST;
 	}
-	//find home/username path
-	struct passwd *pw = getpwuid(getuid());
-	const char *homedir = pw->pw_dir;
-	string homeDir(homedir);
 	//opendir needs full path, ~/Database/... does not work
-	string path(homeDir + "/Database/" + grpName);
+	string path(getDbDir() + "/Database/" + grpName);
 	struct dirent *entry;
 	DIR *dir = opendir(path.c_str());
 	//Mostly for finding errors
