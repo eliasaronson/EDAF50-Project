@@ -18,8 +18,8 @@ using namespace std;
 
 
 Server init(int argc, char* argv[]) {
-    if (argc != 2) {
-        cerr << "Usage: myserver port-number" << endl;
+    if (argc != 3) {
+        cerr << "Usage: myserver port-number database-type" << endl << "Database-type: 0 for live or 1 for disk." << endl << "Example: ./myserver 1050 0" << endl;
         exit(1);
     }
     int port = -1;
@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 
     auto server = init(argc, argv);
     DataBase *db;
-    if (true) {
+    if (stoi(argv[2]) == 0) {
         cout << "Creating live database." << endl;
         db = new LiveDataBase();
     } else {
@@ -58,9 +58,10 @@ int main(int argc, char* argv[]) {
         auto conn = server.waitForActivity();
         cout << "Server active." << endl;
 
-        MessageHandler mess(conn);
 
         if (conn != nullptr) {
+
+        	MessageHandler mess(*conn.get());
             try {
                 //Handle message
                 cout << "Sending message to case handler." << endl;
