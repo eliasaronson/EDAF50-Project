@@ -11,31 +11,14 @@
 
 using namespace std;
 
+string help = "help";
+
 void create_ng(MessageHandler &mess);
 void list_ng(MessageHandler &mess);
 void delete_ng(MessageHandler &mess);
 void list_art(MessageHandler &mess);
-/*
- * * Send an integer to the server as four bytes.
- * */
-void writeNumber(const Connection& conn, int value)
-{
-		conn.write((value >> 24) & 0xFF);
-		conn.write((value >> 16) & 0xFF);
-		conn.write((value >> 8) & 0xFF);
-		conn.write(value & 0xFF);
-}
-
-/* Read a string from the server. */
-string readString(const Connection& conn)
-{
-		string s;
-		char ch;
-		while ((ch = conn.read()) != '$') {
-				s += ch;
-		}
-		return s;
-}
+void create_art(MessageHandler &mess);
+void delete_art(MessageHandler &mess);
 
 /* Creates a client for the given args, if possible.
  * * Otherwise exits with error code.
@@ -63,31 +46,23 @@ Connection init(int argc, char* argv[])
 
 int app(Connection& conn)
 {
-		/*cout << "Type a number: ";
-		int nbr;
-		while (cin >> nbr) {
-				try {
-						cout << nbr << " is ...";
-						writeNumber(conn, nbr);
-						string reply = readString(conn);
-						cout << " " << reply << endl;
-						cout << "Type another number: ";
-				} catch (ConnectionClosedException&) {
-						cout << " no reply from server. Exiting." << endl;
-						return 1;
-				}
-		}
-		cout << "\nexiting.\n";
-		*/
-		MessageHandler mess(conn);
+	MessageHandler mess(conn);
+	cout << help;
+	int input;
+	while (cin >> input)
+	{
+		cout << input;
+	}
 
-		//create_ng(mess);
-		list_ng(mess);
+	list_ng(mess);
+	//create_ng(mess);
+	delete_ng(mess);
+	list_ng(mess);
 		
 
 
 
-		return 0;
+	return 0;
 }
 
 int main(int argc, char* argv[])
@@ -96,35 +71,11 @@ int main(int argc, char* argv[])
 		return app(conn);
 }
 
-void create_ng(MessageHandler &mess)
-{
-	cout << "Enter name of newsgroup to create: ";	
-	string input;
-	cin >> input;
-	//Check for user error here
-	mess.writeInt(Protocol::COM_CREATE_NG);
-	mess.writeString(input);
-	mess.writeInt(Protocol::COM_END);
-	Protocol handshake = static_cast<Protocol>(mess.usrCommand());
-	if (handshake != Protocol::ANS_CREATE_NG) cout << "Unknown handshake from server!" << endl;
-	else
-	{
-		Protocol ack = static_cast<Protocol>(mess.usrCommand());
-		if (ack == Protocol::ANS_ACK);
-		else if (ack == Protocol::ANS_NAK) cout << "Newsgroup already exists!" << endl;
-		else cout << "Unkown ack from server!" << endl; return;
-
-		Protocol end = static_cast<Protocol>(mess.usrCommand());
-		if (end == Protocol::ANS_END) cout << "Newsgroup created!" << endl;
-		else  cout << "Unknown message ending!" << endl;
-	}
-}
-
 void list_ng(MessageHandler &mess)
 {
 	mess.writeInt(Protocol::COM_LIST_NG);
 	mess.writeInt(Protocol::COM_END);
-	Protocol response = static_cast<Protocol>(mess.usrCommand());
+	Protocol response = mess.usrCommand();
 	if (response != Protocol::ANS_LIST_NG) cout << "Unknown handshake from server!" << endl;
 	else
 	{
@@ -144,11 +95,36 @@ void list_ng(MessageHandler &mess)
 			cout << mess.readParam() << "\t\t" << mess.readParam() << endl;
 		}
 		
-		Protocol end = static_cast<Protocol>(mess.usrCommand());
+		Protocol end = mess.usrCommand();
 		if (end == Protocol::ANS_END) cout << "End of list!" << endl;
 		else  cout << "Unknown message ending!" << endl;
 	}
 }
+
+void create_ng(MessageHandler &mess)
+{
+	cout << "Enter name of newsgroup to create: ";	
+	string input;
+	cin >> input;
+	//Check for user error here
+	mess.writeInt(Protocol::COM_CREATE_NG);
+	mess.writeString(input);
+	mess.writeInt(Protocol::COM_END);
+	Protocol handshake = mess.usrCommand();
+	if (handshake != Protocol::ANS_CREATE_NG) cout << "Unknown handshake from server!" << endl;
+	else
+	{
+		Protocol ack = mess.usrCommand();
+		if (ack == Protocol::ANS_ACK);
+		else if (ack == Protocol::ANS_NAK) cout << "Newsgroup already exists!" << endl;
+		else cout << "Unkown ack from server!" << endl; return;
+
+		Protocol end = mess.usrCommand();
+		if (end == Protocol::ANS_END) cout << "Newsgroup created!" << endl;
+		else  cout << "Unknown message ending!" << endl;
+	}
+}
+
 
 void delete_ng(MessageHandler &mess)
 {
@@ -160,16 +136,16 @@ void delete_ng(MessageHandler &mess)
 	mess.writeInt(Protocol::COM_DELETE_NG);
 	mess.writeInt(id);
 	mess.writeInt(Protocol::COM_END);
-	Protocol handshake = static_cast<Protocol>(mess.usrCommand());
+	Protocol handshake = mess.usrCommand();
 	if (handshake != Protocol::ANS_DELETE_NG) cout << "Unknown handshake from server!" << endl;
 	else
 	{
-		Protocol ack = static_cast<Protocol>(mess.usrCommand());
+		Protocol ack = mess.usrCommand();
 		if (ack == Protocol::ANS_ACK);
 		else if (ack == Protocol::ANS_NAK) cout << "Newsgroup doesn't exists!" << endl;
 		else cout << "Unkown ack from server!" << endl; return;
 
-		Protocol end = static_cast<Protocol>(mess.usrCommand());
+		Protocol end = mess.usrCommand();
 		if (end == Protocol::ANS_END) cout << "Newsgroup deleted!" << endl;
 		else  cout << "Unknown message ending!" << endl;
 	}
@@ -185,16 +161,89 @@ void list_art(MessageHandler &mess)
 	mess.writeInt(Protocol::COM_DELETE_NG);
 	mess.writeInt(id);
 	mess.writeInt(Protocol::COM_END);
-	Protocol handshake = static_cast<Protocol>(mess.usrCommand());
-	if (handshake != Protocol::ANS_DELETE_NG) cout << "Unknown handshake from server!" << endl;
+	Protocol handshake = mess.usrCommand();
+	if (handshake != Protocol::ANS_LIST_ART) cout << "Unknown handshake from server!" << endl;
 	else
 	{
-		Protocol ack = static_cast<Protocol>(mess.usrCommand());
+		Protocol ack = mess.usrCommand();
 		if (ack == Protocol::ANS_ACK);
 		else if (ack == Protocol::ANS_NAK) cout << "Newsgroup doesn't exists!" << endl;
 		else cout << "Unkown ack from server!" << endl; return;
 
-		Protocol end = static_cast<Protocol>(mess.usrCommand());
+		Protocol end = mess.usrCommand();
+		if (end == Protocol::ANS_END) cout << "Newsgroup deleted!" << endl;
+		else  cout << "Unknown message ending!" << endl;
+	}
+}
+
+void create_art(MessageHandler &mess)
+{
+	cout << "Enter newsgroup ID to create article in: ";
+	string input;
+	cin >> input;
+	//Check for user error here
+	int id = stoi(input);
+	cout << "Enter article title: ";
+	cin >> input;
+	string title = input;
+	cout << "Enter article author: ";
+	cin >> input;
+	string author = input;
+	cout << "Enter article text: ";
+	cin >> input;
+	string text = input;
+	//Check for user error here
+	mess.writeInt(Protocol::COM_CREATE_ART);
+	mess.writeInt(id);
+	mess.writeString(title);
+	mess.writeString(author);
+	mess.writeString(text);
+	mess.writeInt(Protocol::COM_END);
+	Protocol handshake = mess.usrCommand();
+	if (handshake != Protocol::ANS_CREATE_ART) cout << "Unknown handshake from server!" << endl;
+	else
+	{
+		Protocol ack = mess.usrCommand();
+		if (ack == Protocol::ANS_ACK);
+		else if (ack == Protocol::ANS_NAK) cout << "Newsgroup doesn't exists!" << endl;
+		else cout << "Unkown ack from server!" << endl; return;
+
+		Protocol end = mess.usrCommand();
+		if (end == Protocol::ANS_END) cout << "Newsgroup deleted!" << endl;
+		else  cout << "Unknown message ending!" << endl;
+	}
+	
+}
+
+void delete_art(MessageHandler &mess)
+{
+	cout << "Enter ID of the newsgroup the soon to be deleted article belongs to: ";	
+	string input;
+	cin >> input;
+	//Check for user error here
+	int ng_id = stoi(input);
+	cout << "Enter ID of the article to delete: ";	
+	cin >> input;
+	//Check for user error here
+	int art_id = stoi(input);
+	mess.writeInt(Protocol::COM_DELETE_ART);
+	mess.writeInt(ng_id);
+	mess.writeInt(art_id);
+	mess.writeInt(Protocol::COM_END);
+	Protocol handshake = mess.usrCommand();
+	if (handshake != Protocol::ANS_DELETE_ART) cout << "Unknown handshake from server!" << endl;
+	else
+	{
+		Protocol ack = mess.usrCommand();
+		if (ack == Protocol::ANS_ACK);
+		else if (ack == Protocol::ANS_NAK) {
+			Protocol err = mess.usrCommand();
+			if (err == Protocol::ERR_NG_DOES_NOT_EXIST) cout << "Error! No such newsgroup!";
+			else if (err == Protocol::ERR_ART_DOES_NOT_EXIST) cout << "Error! No such article!";
+		}
+		else cout << "Unkown ack from server!" << endl; return;
+
+		Protocol end = mess.usrCommand();
 		if (end == Protocol::ANS_END) cout << "Newsgroup deleted!" << endl;
 		else  cout << "Unknown message ending!" << endl;
 	}
