@@ -23,12 +23,18 @@ LDFLAGS =   -g
 # Targets
 PROGS = myserver client
 
+# Directories
+PROG_PATH = ../bin
+
 all: $(PROGS)
 
 # Targets rely on implicit rules for compiling and linking
 myserver: article.o newsgroup.o livedatabase.o server.o connection.o messagehandler.o casehandler.o myserver.o diskdatabase.o 
 
 client: connection.o messagehandler.o client.o
+
+install: $(PROGS)
+	cp $(PROGS) $(PROG_PATH)
 
 # Phony targets
 .PHONY: all test clean distclean

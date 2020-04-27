@@ -18,7 +18,7 @@ using std::shared_ptr;
 class MessageHandler {
 public:
 //  MessageHandler(const shared_ptr<Connection>&);
-  MessageHandler(Connection& conn);
+  MessageHandler(Connection& con);
   int readNumber();
   string readString();
   string readParam();
