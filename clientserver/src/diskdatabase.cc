@@ -12,8 +12,7 @@ string getDbDir(){
   char path[200];
   getcwd(path,200);
   char* pch = path;
-  //uncomment next line when run from bin
-  //pch[strlen(pch)-3]=0;
+  pch[strlen(pch)-3]=0;
   string ret(path);
   ret += "Database/";
   return ret;
