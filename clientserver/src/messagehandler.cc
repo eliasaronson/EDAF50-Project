@@ -26,17 +26,13 @@ int MessageHandler::readNumber() {
 }
 
 string MessageHandler::readString() {
-    cout << "Reading string." << endl;
     string res{};
     char c;
 
-    cout << "Information recived." << endl;
     while((c = conn.read()) != '$') {
-        cout << "Char: " << c << endl;
         res += c;
     }
 
-    cout << "Information translated to string: " << res << endl;
 
     return res;
 }
@@ -47,27 +43,20 @@ string MessageHandler::readString() {
 //
 //Maybe change return type to template class??
 string MessageHandler::readParam() {
-    cout << "Reading string." << endl;
 
     string res{};
     Protocol IorS = usrCommand();
     if(IorS == Protocol::PAR_STRING) {
-        cout << "String input recived." << endl;
         int N = readNumber();
-        cout << "Numbers of characters in input: " << N << endl;
         char c;
 
-        cout << "Information recived." << endl;
         for(int i = 0; i < N; i++) {
             c = conn.read();
-            cout << "Char: " << c << endl;
             res += c;
         }
 
-        cout << "Information translated to string: " << res << endl;
 
     } else if(IorS == Protocol::PAR_NUM) {
-        cout << "Int input recived." << res << endl;
         res = to_string(readNumber());
     } else {
         string err = "Error in message: " + to_string(static_cast<int>(IorS)) + " when a int-41 or string-40 parameter was expected!";
@@ -78,9 +67,7 @@ string MessageHandler::readParam() {
 }
 
 Protocol MessageHandler::usrCommand() {
-    cout << "Reading user command." << endl;
     char c = conn.read();
-    cout << "Recived: " << static_cast<int>(c) << endl;
     return static_cast<Protocol>(c);
 }
 /*
@@ -88,7 +75,6 @@ Protocol MessageHandler::usrCommand() {
 */
 void MessageHandler::writeString(const string& s) {
     int n = s.size();
-    cout << "String length: " << n << endl;
     writeInt(Protocol::PAR_STRING);
     directIntWriter(n);
 
@@ -114,9 +100,7 @@ void MessageHandler::writeInt(const Protocol& p) {
 }
 
 void MessageHandler::comEnd() {
-    cout << "Reading message for comEnd." << endl;
     auto com = usrCommand();
-    cout << "Checking for end of message." << endl;
     if(com != (Protocol::COM_END)) {
         writeInt(Protocol::COM_END);
         throw runtime_error("Error in message. End of message not recived when expected!");
