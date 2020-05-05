@@ -1,5 +1,5 @@
 #ifndef DISKDATABASE_H
-#define DISKEDATABASE_H
+#define DISKDATABASE_H
 
 #include "database.h"
 #include "article.h"
@@ -27,17 +27,17 @@ public:
   DiskDataBase() = default;
   DiskDataBase(const DiskDataBase& d) = default;
   ~DiskDataBase() = default;
-  void addNewsgroup(const string& name);
-  void removeNewsgroup(int& groupId);
-  void addArticle(string& title, string& auth, string& text, int& grpId);
-  void removeArticle(int& groupId, int& artId);
-  vector<Article> listArtikels(const int& id); 
-  vector<Newsgroup> listNewsgroups();
-  Article getArtikel(int& grpId, int& artId);
+  void addNewsgroup(string) override;
+  void removeNewsgroup(int) override;
+  void addArtikel(string, string, string, int) override;
+  void removeArtikel(int, int) override;
+  vector<Article> listArtikels(int) override;
+  vector<Newsgroup> listNewsgroups() override;
+  Article getArtikel(int, int) override;
 private:
 };
 
-bool containsWord(const string& name);
+//bool containsWord(string& name);
 int currentIndex();
 string getName(int& groupId);
 string getId_txt();

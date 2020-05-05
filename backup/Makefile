@@ -21,14 +21,14 @@ LDFLAGS =   -g
 #LDFLAGS +=  -stdlib=libc++
 
 # Targets
-PROGS = myserver client
+PROGS = myserver #client
 
 all: $(PROGS)
 
 # Targets rely on implicit rules for compiling and linking
 myserver: article.o newsgroup.o livedatabase.o server.o connection.o messagehandler.o casehandler.o myserver.o diskdatabase.o 
 
-client: article.o newsgroup.o connection.o messagehandler.o client.o
+#client: article.o newsgroup.o connection.o messagehandler.o client.o
 
 # Phony targets
 .PHONY: all test clean distclean

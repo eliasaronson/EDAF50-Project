@@ -11,7 +11,7 @@ string getDbDir(){
   //needs to be big enough for full directory path
   char path[200];
   getcwd(path,200);
-  char* pch = path;
+//  char* pch = path;
   //uncomment next line when run from bin
   //pch[strlen(pch)-3]=0;
   string ret(path);
@@ -23,7 +23,7 @@ string getDbDir(){
 int currentIndex(){
 	//should be ~/Database/id.txt
 	std::ifstream fin("id.txt");
-	int id;
+	int id{};
 	if (fin.is_open()){
 		fin.seekg(-1,std::ios_base::end);			//go to one spot before the EOF
 		bool keepLooping = true;
@@ -71,7 +71,7 @@ string getId_txt(){
 	return txt;
 }
 
-bool containsWord(const string& name){
+bool containsWord(string& name){
 	string txt = getId_txt();
 	cout << "txt: " << txt << endl;
 	std::stringstream ss(txt);
@@ -92,7 +92,7 @@ bool containsWord(const string& name){
 	return false;
 }
 
-void DiskDataBase::addNewsgroup(const string& name) {
+void DiskDataBase::addNewsgroup(string name) {
 	if (containsWord(name)){
 		cerr << "Error : Newsgroup already exists" << endl;
 		throw Protocol::ERR_NG_ALREADY_EXISTS;
@@ -134,7 +134,7 @@ string getName(int& groupId){
 
 }
 
-void DiskDataBase::removeNewsgroup(int& groupId) {
+void DiskDataBase::removeNewsgroup(int groupId) {
 	string name = getName(groupId);
 	if (name.compare("ERRORIdNotConnectToName")==0){
 		throw Protocol::ERR_NG_DOES_NOT_EXIST;
@@ -213,7 +213,7 @@ int nextArtId(int& grpId){
 	return id;
 }
 
-void DiskDataBase::addArticle(string& title, string& auth, string& text, int& grpId){
+void DiskDataBase::addArtikel(string title, string auth, string text, int grpId){
 	string grpName = getName(grpId);
 	if (grpName.compare("ERRORIdNotConnectToName")==0){
 		throw Protocol::ERR_NG_DOES_NOT_EXIST;
@@ -281,7 +281,7 @@ Article* containsArticle(int& grpId, int& artId){
 	return NULL;
 }
 
-void DiskDataBase::removeArticle(int& groupId, int& artId) {
+void DiskDataBase::removeArtikel(int groupId, int artId) {
 	string grpName = getName(groupId);
 	if (grpName.compare("ERRORIdNotConnectToName")==0){
 		cout << "Error : can't remove article: newsgroup doesn't exist" << endl;
@@ -301,7 +301,7 @@ void DiskDataBase::removeArticle(int& groupId, int& artId) {
 	}
 }
 
-vector<Article> DiskDataBase::listArtikels(const int& id) {
+vector<Article> DiskDataBase::listArtikels(const int id) {
   int tempId = static_cast<int>(id);
   string grpName = getName(tempId); 
   if (grpName.compare("ERRORIdNotConnectToName")==0){
@@ -366,7 +366,7 @@ vector<Newsgroup> DiskDataBase::listNewsgroups() {
   return ret;
 }
 
-Article DiskDataBase::getArtikel(int& grpId, int& artId){
+Article DiskDataBase::getArtikel(int grpId, int artId){
   string grpName = getName(grpId); 
   if (grpName.compare("ERRORIdNotConnectToName")==0){
 		cout << "Error : can't list articles: newsgroup doesn't exist" << endl;

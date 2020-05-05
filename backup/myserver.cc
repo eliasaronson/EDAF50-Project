@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
     } else {
         // Create diskdatabase instead
         cout << "Creating disk database." << endl;
-        db = new LiveDataBase();
+        db = new DiskDataBase();
     }
 
 
