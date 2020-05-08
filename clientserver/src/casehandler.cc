@@ -10,7 +10,7 @@
 
 using namespace std;
 
-CaseHandler::CaseHandler(MessageHandler& mess, DataBase& db) {
+void CaseHandler::CaseHandler(MessageHandler& mess, DataBase& db) {
     cout << "Case handler called." << endl;
     auto m = mess.usrCommand();
     cout << "Message recived:" << static_cast<int>(m) << endl;

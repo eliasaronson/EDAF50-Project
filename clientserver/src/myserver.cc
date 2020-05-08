@@ -37,21 +37,7 @@ Server init(int argc, char* argv[]) {
     return server;
 }
 
-int main(int argc, char* argv[]) {
-    cout << "Startring server." << endl;
-
-    auto server = init(argc, argv);
-    DataBase *db;
-    if (stoi(argv[2]) == 0) {
-        cout << "Creating live database." << endl;
-        db = new LiveDataBase();
-    } else {
-        // Create diskdatabase instead
-        cout << "Creating disk database." << endl;
-        db = new LiveDataBase();
-    }
-
-
+void runServer(Server& server, DataBase* db) {
     while (true) {
         cout << endl;
         cout << "Waiting for server activity." << endl;
@@ -61,11 +47,11 @@ int main(int argc, char* argv[]) {
 
         if (conn != nullptr) {
 
-        	MessageHandler mess(*conn.get());
+            MessageHandler mess(*conn.get());
             try {
                 //Handle message
                 cout << "Sending message to case handler." << endl;
-                CaseHandler(mess, *db);
+                CaseHandler::CaseHandler(mess, *db);
             } catch (ConnectionClosedException&) {
                 server.deregisterConnection(conn);
                 cout << "Client closed connection" << endl;
@@ -80,5 +66,28 @@ int main(int argc, char* argv[]) {
         }
     }
     delete(db);
+
+}
+
+DataBase* chooseDatabase(int ops) {
+    DataBase *db;
+    if (ops == 0) {
+        cout << "Creating live database." << endl;
+        db = new LiveDataBase();
+    } else {
+        // Create diskdatabase instead
+        cout << "Creating disk database." << endl;
+        db = new LiveDataBase();
+    }
+    return db;
+}
+
+int main(int argc, char* argv[]) {
+    cout << "Startring server." << endl;
+
+    auto server = init(argc, argv);
+    auto db = chooseDatabase(*argv[1]);
+    runServer(server, db);
+
     return 0;
 }
