@@ -37,7 +37,7 @@ Server init(int argc, char* argv[]) {
     return server;
 }
 
-void runServer(Server& server, DataBase* db) {
+void runServer(Server& server, unique_ptr<DataBase> &db) {
     while (true) {
         cout << endl;
         cout << "Waiting for server activity." << endl;
@@ -65,21 +65,19 @@ void runServer(Server& server, DataBase* db) {
             cout << "New client connects" << endl;
         }
     }
-    delete(db);
-
 }
 
-DataBase* chooseDatabase(int ops) {
-    DataBase *db;
+unique_ptr<DataBase> chooseDatabase(int ops) {
     if (ops == 0) {
         cout << "Creating live database." << endl;
-        db = new LiveDataBase();
+        unique_ptr<DataBase> db (new LiveDataBase());
+        return db;
     } else {
         // Create diskdatabase instead
         cout << "Creating disk database." << endl;
-        db = new LiveDataBase();
+        unique_ptr<DataBase> db (new LiveDataBase()); //WARNING! Change to diskdatabase
+        return db;
     }
-    return db;
 }
 
 int main(int argc, char* argv[]) {
