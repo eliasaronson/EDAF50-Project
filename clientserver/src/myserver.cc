@@ -81,7 +81,7 @@ unique_ptr<DataBase> chooseDatabase(int ops) {
 }
 
 int main(int argc, char* argv[]) {
-    cout << "Startring server." << endl;
+    cout << "Starting server." << endl;
 
     auto server = init(argc, argv);
     auto db = chooseDatabase(*argv[1]);

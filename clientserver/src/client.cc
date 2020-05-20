@@ -2,7 +2,6 @@
 #include "connectionclosedexception.h"
 #include "messagehandler.h"
 
-
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -58,33 +57,45 @@ Connection init(int argc, char* argv[])
 int app(Connection& conn)
 {
 	MessageHandler mess(conn);
+	int input;
+
 	cout << help << endl;
-	string input;
 	cout << "Your input: ";
-	while (cin >> input)
+	while (true)
 	{
-		if (!isdigit(input[0])) input = "422";
-		try
-		{
-			switch(stoi(input))
+		if (cin >> input)
+		{	
+			try
 			{
-				case 0: cout << "\nexiting.\n"; return 0;
-				case 1: list_ng(mess); break;
-				case 2: create_ng(mess); break;
-				case 3: delete_ng(mess); break;
-				case 4: list_art(mess); break;
-				case 5: create_art(mess); break;
-				case 6: delete_art(mess); break;
-				case 7: get_art(mess); break;
-				case 9: cout << help << endl; break;
-				default: cout << "Wrong input! Input 9 to see available options!" << endl;
+				switch(input)
+				{
+					case 0: cout << "\nexiting.\n"; return 0;
+					case 1: list_ng(mess); break;
+					case 2: create_ng(mess); break;
+					case 3: delete_ng(mess); break;
+					case 4: list_art(mess); break;
+					case 5: create_art(mess); break;
+					case 6: delete_art(mess); break;
+					case 7: get_art(mess); break;
+					case 9: cout << help << endl; break;
+					default: cout << "Wrong input! Input 9 to see available options!" << endl;
+				}
 			}
+			catch (const ConnectionClosedException&)
+			{
+				cout << "No reply from server. Exiting." << endl;
+				return 1;
+			}
+
+
 		}
-		catch (ConnectionClosedException&)
+		else 
 		{
-			cout << "no reply from server. Exiting." << endl;
-			return 1;
+			cout << "Not a number! Input 9 to see available options!" << endl;
+			cin.clear();
+			cin.ignore(1024, '\n');
 		}
+
 		cout << "Your input: ";
 	}
 
@@ -101,6 +112,7 @@ void list_ng(MessageHandler &mess)
 {
 	mess.writeInt(Protocol::COM_LIST_NG);
 	mess.writeInt(Protocol::COM_END);
+
 	Protocol response = mess.usrCommand();
 	if (response != Protocol::ANS_LIST_NG) cout << "Unknown handshake from server!" << endl;
 	else
@@ -129,12 +141,19 @@ void list_ng(MessageHandler &mess)
 
 void create_ng(MessageHandler &mess)
 {
-	cout << "Enter name of newsgroup to create: ";	
 	string input;
-	cin >> input;
+	
+	cout << "Enter name of newsgroup to create: ";	
+	getline(cin, input);
+	if (input.length() == 0)
+	{
+		cout << ""
+	}
+
 	mess.writeInt(Protocol::COM_CREATE_NG);
 	mess.writeString(input);
 	mess.writeInt(Protocol::COM_END);
+
 	Protocol handshake = mess.usrCommand();
 	if (handshake != Protocol::ANS_CREATE_NG) cout << "Unknown handshake from server!" << endl;
 	else
@@ -154,14 +173,16 @@ void create_ng(MessageHandler &mess)
 
 void delete_ng(MessageHandler &mess)
 {
+	int id;
+
 	cout << "Enter ID of newsgroup to delete: ";	
-	string input;
-	cin >> input;
-	if (!isdigit(input[0])){ cout << "Error! Not a number!" << endl; return; }
-	int id = stoi(input);
+	cin >> id;
+	if (!cin){ cout << "Error! Not a number!" << endl; return; }
+
 	mess.writeInt(Protocol::COM_DELETE_NG);
 	mess.writeInt(id);
 	mess.writeInt(Protocol::COM_END);
+
 	Protocol handshake = mess.usrCommand();
 	if (handshake != Protocol::ANS_DELETE_NG) cout << "Unknown handshake from server!" << endl;
 	else
@@ -179,14 +200,16 @@ void delete_ng(MessageHandler &mess)
 
 void list_art(MessageHandler &mess)
 {
+	int id;
+
 	cout << "Enter newsgroup ID to list articles from: ";
-	string input;
-	cin >> input;
-	if (!isdigit(input[0])){ cout << "Error! Not a number!" << endl; return; }
-	int id = stoi(input);
+	cin >> id;
+	if (!cin){ cout << "Error! Not a number!" << endl; return; }
+
 	mess.writeInt(Protocol::COM_LIST_ART);
 	mess.writeInt(id);
 	mess.writeInt(Protocol::COM_END);
+
 	Protocol handshake = mess.usrCommand();
 	if (handshake != Protocol::ANS_LIST_ART) cout << "Unknown handshake from server!" << endl;
 	else
@@ -221,26 +244,26 @@ void list_art(MessageHandler &mess)
 
 void create_art(MessageHandler &mess)
 {
+	string input, title, author, text;
+	int id;
+
 	cout << "Enter newsgroup ID to create article in: ";
-	string input;
-	cin >> input;
-	if (!isdigit(input[0])){ cout << "Error! Not a number!" << endl; return; }
-	int id = stoi(input);
+	cin >> id;
+	if (!cin){ cout << "Error! Not a number!" << endl; return; }
 	cout << "Enter article title: ";
-	cin >> input;
-	string title = input;
+	getline(cin, title);
 	cout << "Enter article author: ";
-	cin >> input;
-	string author = input;
+	getline(cin, author);
 	cout << "Enter article text: ";
-	cin >> input;
-	string text = input;
+	while (getline(cin, input)) text += input += "\n";
+
 	mess.writeInt(Protocol::COM_CREATE_ART);
 	mess.writeInt(id);
 	mess.writeString(title);
 	mess.writeString(author);
 	mess.writeString(text);
 	mess.writeInt(Protocol::COM_END);
+
 	Protocol handshake = mess.usrCommand();
 	if (handshake != Protocol::ANS_CREATE_ART) cout << "Unknown handshake from server!" << endl;
 	else
@@ -259,19 +282,20 @@ void create_art(MessageHandler &mess)
 
 void delete_art(MessageHandler &mess)
 {
+	int ng_id, art_id;
+
 	cout << "Enter ID of the newsgroup the soon to be deleted article belongs to: ";	
-	string input;
-	cin >> input;
-	if (!isdigit(input[0])){ cout << "Error! Not a number!" << endl; return; }
-	int ng_id = stoi(input);
+	cin >> ng_id;
+	if (!cin){ cout << "Error! Not a number!" << endl; return; }
 	cout << "Enter ID of the article to delete: ";	
-	cin >> input;
-	if (!isdigit(input[0])){ cout << "Error! Not a number!" << endl; return; }
-	int art_id = stoi(input);
+	cin >> art_id;
+	if (!cin){ cout << "Error! Not a number!" << endl; return; }
+
 	mess.writeInt(Protocol::COM_DELETE_ART);
 	mess.writeInt(ng_id);
 	mess.writeInt(art_id);
 	mess.writeInt(Protocol::COM_END);
+
 	Protocol handshake = mess.usrCommand();
 	if (handshake != Protocol::ANS_DELETE_ART) cout << "Unknown handshake from server!" << endl;
 	else
@@ -293,19 +317,20 @@ void delete_art(MessageHandler &mess)
 
 void get_art(MessageHandler &mess)
 {
+	int ng_id, art_id;
+	
 	cout << "Enter ID of the newsgroup the article belongs to: ";	
-	string input;
-	cin >> input;
-	if (!isdigit(input[0])){ cout << "Error! Not a number!" << endl; return; }
-	int ng_id = stoi(input);
+	cin >> ng_id;
+	if (!cin){ cout << "Error! Not a number!" << endl; return; }
 	cout << "Enter ID of the article to get: ";	
-	cin >> input;
-	if (!isdigit(input[0])){ cout << "Error! Not a number!" << endl; return; }
-	int art_id = stoi(input);
+	cin >> art_id;
+	if (!cin){ cout << "Error! Not a number!" << endl; return; }
+
 	mess.writeInt(Protocol::COM_GET_ART);
 	mess.writeInt(ng_id);
 	mess.writeInt(art_id);
 	mess.writeInt(Protocol::COM_END);
+
 	Protocol handshake = mess.usrCommand();
 	if (handshake != Protocol::ANS_GET_ART) cout << "Unknown handshake from server!" << endl;
 	else
