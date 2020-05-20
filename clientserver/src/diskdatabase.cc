@@ -115,8 +115,11 @@ void DiskDataBase::addNewsgroup(string name) {
     string NGname = "'" + name + "'";
     cout << "Newsgrop name with apostrhopes: " << NGname << endl;
 		//Create the actual directory
-		string path("mkdir -p ../Database/" + NGname);		
-		int status = system(path.c_str());
+    
+		//string path("mkdir -p ../Database/" + NGname);		
+		//int status = system(path.c_str());
+    string path(getDbDir() + "/" + name);
+    int status = mkdir(path.c_str(),S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 		if (status == -1) {
       //unexpected error creating folder
      	cerr << "Error :  " << strerror(errno) << endl; 
