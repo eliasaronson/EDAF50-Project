@@ -5,6 +5,8 @@ using std::string;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::regex;
+using std::stringstream;
 
 //Assumes the code is executed from .../bin and Database location should be ../Database
 string getDbDir(){
@@ -47,11 +49,13 @@ int currentIndex(){
 		string lastLine;
 		getline(fin,lastLine);
 		id = std::stoi(lastLine);					//For some reason lastline is only index on last row
+    cout << "current Index from currentIndex(): " << id << endl;
 		fin.close();
 	}
 	return id;
 }
 
+//obsolete function now when containsword and getname is changed?
 string getId_txt(){
 	//should be ~/Database/id.txt
   string path(getDbDir() + "id.txt");
@@ -69,33 +73,49 @@ string getId_txt(){
 }
 
 bool containsWord(const string& name){
-	string txt = getId_txt();
-	cout << "txt: " << txt << endl;
-	std::stringstream ss(txt);
-	int tempId;
+  int tempId;
 	string word;
-	cout << "before ss.good" << endl;
-	//Seems like this loops runs to many times (one to many?) Not anymore?
-	while (!ss.eof() && ss.good()){
-		cout << "ss.good() = true" << endl;
-		ss>>word;
-		ss>>tempId;
-		cout << "word : " << word << " name : " << name << endl;
-		if (/*ss.good() &&*/ word.compare(name) == 0){
-			cout << "containsWord returns true" << endl;
-			return true;
-		} 
+
+  string path(getDbDir() + "id.txt");
+	std::ifstream file(path.c_str());
+	string txt;
+	string line;
+	if (file.is_open()){
+		while (file.good() && !file.eof()){
+			getline(file, line);
+      string revLine = line;
+      reverse(revLine.begin(),revLine.end());
+      stringstream ss(revLine);
+      ss >> tempId;
+      string regx = R"(#([\s\S]*?)#)";
+      std::smatch matches;
+      if (regex_search(line, matches, regex(regx)))
+      {
+        word = matches[1];
+      }
+      cout << "ContainsWord is searching for : " << name << " but found: " << word << endl;
+		  if (name == word){
+        file.close();
+        cout << "ContainsWord returns true" << endl;
+        return true;
+		  } 
+		}
 	}
-	return false;
+  file.close();
+  cout << "ContainsWord returns false" << endl;
+  return false;
 }
 
-void DiskDataBase::addNewsgroup(const string& name) {
+void DiskDataBase::addNewsgroup(string name) {
 	if (containsWord(name)){
 		cerr << "Error : Newsgroup already exists" << endl;
-		throw Protocol::ERR_NG_ALREADY_EXISTS;
+    int err = static_cast<int>(Protocol::ERR_NG_ALREADY_EXISTS);
+		throw err;
 	} else {
+    string NGname = "'" + name + "'";
+    cout << "Newsgrop name with apostrhopes: " << NGname << endl;
 		//Create the actual directory
-		string path("mkdir -p ../Database/" + name);		
+		string path("mkdir -p ../Database/" + NGname);		
 		int status = system(path.c_str());
 		if (status == -1) {
       //unexpected error creating folder
@@ -108,7 +128,8 @@ void DiskDataBase::addNewsgroup(const string& name) {
 			//should be ~/Database/id.txt
       string path2(getDbDir() + "id.txt");
 			std::ofstream outFile(path2.c_str(),std::ios_base::app);
-			outFile << name + " " << nextId << "\n";
+      string IdName = "#" + name + "#";
+			outFile << IdName + " " << nextId << "\n";
 			outFile.close();
 			//For debugging
 			cout << "Directory created i.e. Newsgroup: " << name << endl;
@@ -118,26 +139,46 @@ void DiskDataBase::addNewsgroup(const string& name) {
 }
 
 string getName(int& groupId){
-	std::stringstream ss(getId_txt());
 	int tempId;
 	string word;
-	while (!ss.eof() && ss.good()){
-		ss>>word;
-		ss>>tempId;
-		if (groupId == tempId){
-			return word;
-		} 
-	}
-	return "ERRORIdNotConnectToName";
 
+  string path(getDbDir() + "id.txt");
+	std::ifstream file(path.c_str());
+	string txt;
+	string line;
+	if (file.is_open()){
+		while (file.good() && !file.eof()){
+			getline(file, line);
+      string revLine = line;
+      reverse(revLine.begin(),revLine.end());
+      stringstream ss(revLine);
+      ss >> tempId;
+
+      string regx = R"(#([\s\S]*?)#)";
+      std::smatch matches;
+      if (regex_search(line, matches, regex(regx)))
+      {
+        word = matches[1];
+      }
+		  if (groupId == tempId){
+        file.close();
+        cout << "Group id: " << groupId << " matches with ng name: " << word << endl;
+			  return word;
+		  } 
+		}
+	}
+  file.close();
+	return "ERRORIdNotConnectToName";
 }
 
-void DiskDataBase::removeNewsgroup(int& groupId) {
+void DiskDataBase::removeNewsgroup(int groupId) {
 	string name = getName(groupId);
 	if (name.compare("ERRORIdNotConnectToName")==0){
-		throw Protocol::ERR_NG_DOES_NOT_EXIST;
+    int err = static_cast<int>(Protocol::ERR_NG_DOES_NOT_EXIST);
+		throw err;
 	} else {
-		string path("rm -r ../Database/" + name);
+    string NGname = "'" + name + "'";
+		string path("rm -r ../Database/" + NGname);
 		int status = system(path.c_str());
 		if (status == -1) {
      	cerr << "Error :  " << strerror(errno) << endl; 
@@ -150,23 +191,36 @@ void DiskDataBase::removeNewsgroup(int& groupId) {
 			//should be ../Database/temp.txt
       string path3(getDbDir() + "temp.txt");
 			std::ofstream outFile(path3.c_str(), std::ofstream::out);
-			std::stringstream ss(getId_txt());
-			int tempId;
-			string word;
-			while (!ss.eof() && ss.good()){
-				ss>>word;
-				if (ss.eof()){
-					break;
-				}
-				ss>>tempId;
-				if (groupId == tempId && word.compare(name)==0){
-					cout << "matching word: " << word << " Name to remove: " << name << endl;
-					cout << "matching id: " << tempId << " Id to remove: " << groupId << endl;
-				} else {
-				       outFile << word + " " << tempId << "\n";
-				}
-			}
-			inFile.close();
+      
+      int tempId;
+	    string word;
+
+	    string txt;
+	    string line;
+	    if (inFile.is_open()){
+		    while (inFile.good() && !inFile.eof()){
+			    getline(inFile, line);
+          string revLine = line;
+          reverse(revLine.begin(),revLine.end());
+          stringstream ss(revLine);
+          ss >> tempId;
+
+          string regx = R"(#([\s\S]*?)#)";
+          std::smatch matches;
+          if (regex_search(line, matches, regex(regx))){
+            word = matches[1];
+            if (groupId == tempId && word.compare(name)==0) {
+					    cout << "matching word: " << word << " Name to remove: " << name << endl;
+					    cout << "matching id: " << tempId << " Id to remove: " << groupId << endl;
+            }
+            else {
+              string IdWord = "#" + word + "#";
+				      outFile << IdWord + " " << tempId << "\n";
+            }
+          }
+		    }
+	    }
+  		inFile.close();
 			outFile.close();
 
 			//should be ../Database/id.txt
@@ -181,7 +235,7 @@ void DiskDataBase::removeNewsgroup(int& groupId) {
 int nextArtId(int& grpId){
 	string grpName = getName(grpId); 
 	//opendir needs full path, ~/Database/... does not work
-	string path(getDbDir() + "/Database/" + grpName);
+	string path(getDbDir() + grpName);
 	struct dirent *entry;
 	DIR *dir = opendir(path.c_str());
 	//Mostly for finding errors
@@ -209,16 +263,17 @@ int nextArtId(int& grpId){
 	return id;
 }
 
-void DiskDataBase::addArticle(string& title, string& auth, string& text, int& grpId){
+void DiskDataBase::addArtikel(string title, string auth, string text, int grpId) {
 	string grpName = getName(grpId);
 	if (grpName.compare("ERRORIdNotConnectToName")==0){
-		throw Protocol::ERR_NG_DOES_NOT_EXIST;
+    int err = static_cast<int>(Protocol::ERR_NG_DOES_NOT_EXIST);
+		throw err;
 	} else {
 		int artId = nextArtId(grpId);
 		if (artId == -1){
 			throw std::runtime_error("Can't open directory");
 		}
-		string path(getDbDir() + "/Database/" + grpName + "/" + std::to_string(artId));
+		string path(getDbDir() + grpName + "/" + std::to_string(artId));
 		std::ofstream outFile(path);
 		if (!outFile.is_open()){
 			cout << "Error : outFile isn't open" << endl;
@@ -230,19 +285,19 @@ void DiskDataBase::addArticle(string& title, string& auth, string& text, int& gr
 }
 
 //newsgroup must exist to call this
-Article* containsArticle(int& grpId, int& artId){
+Article* containsArticle(int& grpId, int& artId) {
 	string grpName = getName(grpId); 
-
+  if (grpName.compare("ERRORIdNotConnectToName")==0){
+    int err = static_cast<int>(Protocol::ERR_NG_DOES_NOT_EXIST);
+		throw err;
+	}
 	//opendir needs full path, ~/Database/... does not work
-	string path(getDbDir() + "/Database/" + grpName);
+	string path(getDbDir() + grpName);
 	struct dirent *entry;
 	DIR *dir = opendir(path.c_str());
 
-	//Mostly for finding errors
-	if (errno == ENOENT){
-		cout << "opendir failed: " << std::strerror(errno) << endl;
-	}
 	if (dir == NULL){
+		cout << "opendir failed: " << std::strerror(errno) << endl;
 		return NULL;
 	}
 
@@ -259,7 +314,15 @@ Article* containsArticle(int& grpId, int& artId){
       string title, auth, text;
       getline(art, title);
       getline(art, auth);
-      getline(art, text);
+      string line;
+      while (art.good() && !art.eof()){
+        std::getline(art, line,'\n');
+        if (art.eof()) {
+			    text += line;
+        } else {
+			    text += line + "\n";
+        }
+		  }
 			closedir(dir);
       Article* ret = new Article(title,auth,text,id);
 		  return ret;
@@ -269,17 +332,22 @@ Article* containsArticle(int& grpId, int& artId){
 	return NULL;
 }
 
-void DiskDataBase::removeArticle(int& groupId, int& artId) {
+void DiskDataBase::removeArtikel(int groupId, int artId) {
 	string grpName = getName(groupId);
 	if (grpName.compare("ERRORIdNotConnectToName")==0){
 		cout << "Error : can't remove article: newsgroup doesn't exist" << endl;
-		throw Protocol::ERR_NG_DOES_NOT_EXIST;
+    int err = static_cast<int>(Protocol::ERR_NG_DOES_NOT_EXIST);
+		throw err;
 	} else if (containsArticle(groupId, artId) == NULL){
 		cout << "Error : can't remove article: article doesn't exists" << endl;
-		throw Protocol::ERR_ART_DOES_NOT_EXIST;
+    int err = static_cast<int>(Protocol::ERR_ART_DOES_NOT_EXIST);
+		throw err;
 	}
 	else {
-		string command("rm ~/Database/" + grpName + "/" + std::to_string(artId));
+    string NGname = getDbDir() + grpName; 
+    cout << "NGname: " << NGname << endl;
+		string command("rm '" + NGname + "/" + std::to_string(artId) + "'");
+    cout << "about to do comand: " << command << endl;
 		int status = system(command.c_str());
 		if (status == -1){
       //unexpected error when removing directory
@@ -289,23 +357,22 @@ void DiskDataBase::removeArticle(int& groupId, int& artId) {
 	}
 }
 
-vector<Article> DiskDataBase::listArtikels(const int& id) {
+vector<Article> DiskDataBase::listArtikels(const int id) {
   int tempId = static_cast<int>(id);
   string grpName = getName(tempId); 
   if (grpName.compare("ERRORIdNotConnectToName")==0){
 		cout << "Error : can't list articles: newsgroup doesn't exist" << endl;
-		throw Protocol::ERR_NG_DOES_NOT_EXIST;
+    int err = static_cast<int>(Protocol::ERR_NG_DOES_NOT_EXIST);
+		throw err;
 	}
 	//opendir needs full path, ~/Database/... does not work
-	string path(getDbDir() + "/Database/" + grpName);
+  string NGname = getDbDir() + grpName; 
+	string path(NGname);
 	struct dirent *entry;
 	DIR *dir = opendir(path.c_str());
-	//Mostly for finding errors
-	if (errno == ENOENT){
-		cout << "opendir failed: " << std::strerror(errno) << endl;
-	}
 
 	if (dir == NULL){
+		cout << "opendir failed: " << std::strerror(errno) << endl;
 		throw std::runtime_error("can't open directory");
 	}
 
@@ -316,45 +383,72 @@ vector<Article> DiskDataBase::listArtikels(const int& id) {
   while ((entry = readdir(dir)) != NULL) {
     //this needs to be able to handle . and .. file
     char* file = entry->d_name;
-    if (strcmp(file,dotfile) != 0 || strcmp(file,dotdotfile) != 0) {
+    if (strcmp(file,dotfile) != 0 && strcmp(file,dotdotfile) != 0) {
       int artId = std::atoi(entry->d_name);
       string title; string auth; string text;
       //requires c-string
-      std::ifstream inFile(entry->d_name);
-      getline(inFile,title);
-      getline(inFile,auth);
+      string path2(path + '/' + std::to_string(artId));
+      std::ifstream inFile(path2.c_str(), std::ifstream::in);
+      std::getline(inFile,title,'\n');
+      std::getline(inFile,auth,'\n');
       
       string line;
       while (inFile.good() && !inFile.eof()){
-			  getline(inFile, line);
+        std::getline(inFile, line,'\n');
 			  text += line + "\n";
 		  }
-      ret.emplace(ret.begin()+artId,title,auth,text,artId);
+      if (title.length() != 0) {
+        //ret.emplace(ret.begin()+artId,title,auth,text,artId);
+        ret.emplace_back(title,auth,text,artId);
+      }
+      inFile.close();
     }
   }
   closedir(dir);
+  sort(ret.begin(),ret.end(),[] (Article& a, Article& b) -> bool {return (a.getId()<b.getId());});
   return ret;
 }
 
 vector<Newsgroup> DiskDataBase::listNewsgroups() {
   vector<Newsgroup> ret;
-  string txt = getId_txt();
-	std::stringstream ss(txt);
-	int tempId;
+  int tempId;
 	string word;
-	while (!ss.eof() && ss.good()){
-		ss>>word;
-		ss>>tempId;
-    ret.emplace(ret.begin()+tempId,word,tempId);
+
+  string path(getDbDir() + "id.txt");
+	std::ifstream file(path.c_str());
+	string txt;
+	string line;
+	if (file.is_open()){
+		while (file.good() && !file.eof()){
+			getline(file, line);
+      string revLine = line;
+      reverse(revLine.begin(),revLine.end());
+      stringstream ss(revLine);
+      ss >> tempId;
+
+      string regx = R"(#([\s\S]*?)#)";
+      std::smatch matches;
+      if (regex_search(line, matches, regex(regx)))
+      {
+        word = matches[1];
+        if (word.length() >= 1) {
+          cout << "listNG is adding: " << word << " with id: " << tempId << "to ret" << endl;
+          ret.emplace_back(word,static_cast<long long int>(tempId));
+        }
+      }
+		}
 	}
+  file.close();
+  cout << "listNG returns vector ret" << endl;
   return ret;
 }
 
-Article DiskDataBase::getArtikel(int& grpId, int& artId){
+Article DiskDataBase::getArtikel(int grpId, int artId) {
   string grpName = getName(grpId); 
   if (grpName.compare("ERRORIdNotConnectToName")==0){
 		cout << "Error : can't list articles: newsgroup doesn't exist" << endl;
-		throw Protocol::ERR_NG_DOES_NOT_EXIST;
+    int err = static_cast<int>(Protocol::ERR_NG_DOES_NOT_EXIST);
+		throw err;
 	}
   Article* retp = containsArticle(grpId,artId);
   if (retp != NULL) {
@@ -363,6 +457,7 @@ Article DiskDataBase::getArtikel(int& grpId, int& artId){
     return cpy;
   }
   else {
-    throw Protocol::ERR_ART_DOES_NOT_EXIST;
+    int err = static_cast<int>(Protocol::ERR_ART_DOES_NOT_EXIST);
+    throw err;
   }
 }

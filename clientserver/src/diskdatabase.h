@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <vector>
+#include <regex>
 
 using std::string;
 using std::istream;
@@ -27,13 +28,13 @@ public:
   DiskDataBase() = default;
   DiskDataBase(const DiskDataBase& d) = default;
   ~DiskDataBase() = default;
-  void addNewsgroup(const string& name);
-  void removeNewsgroup(int& groupId);
-  void addArticle(string& title, string& auth, string& text, int& grpId);
-  void removeArticle(int& groupId, int& artId);
-  vector<Article> listArtikels(const int& id); 
-  vector<Newsgroup> listNewsgroups();
-  Article getArtikel(int& grpId, int& artId);
+  void addNewsgroup(string name) override;
+  void removeNewsgroup(int groupId) override;
+  void addArtikel(string title, string auth, string text, int grpId) override;
+  void removeArtikel(int groupId, int artId) override;
+  vector<Article> listArtikels(int id) override; 
+  vector<Newsgroup> listNewsgroups() override;
+  Article getArtikel(int grpId, int artId) override;
 private:
 };
 
