@@ -68,6 +68,7 @@ void runServer(Server& server, unique_ptr<DataBase> &db) {
 }
 
 unique_ptr<DataBase> chooseDatabase(int ops) {
+    cout << ops << endl;
     if (ops == 0) {
         cout << "Creating live database." << endl;
         unique_ptr<DataBase> db (new LiveDataBase());
@@ -84,7 +85,7 @@ int main(int argc, char* argv[]) {
     cout << "Starting server." << endl;
 
     auto server = init(argc, argv);
-    auto db = chooseDatabase(*argv[1]);
+    auto db = chooseDatabase(stoi(argv[2]));
     runServer(server, db);
 
     return 0;
