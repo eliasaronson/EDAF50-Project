@@ -8,6 +8,16 @@ using std::endl;
 using std::regex;
 using std::stringstream;
 
+DiskDataBase::DiskDataBase(){
+    string path(getDbDir());
+    int status = mkdir(path.c_str(),S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    if (status == -1) {
+      //unexpected error creating folder
+     	cerr << "Error :  " << strerror(errno) << endl; 
+			throw std::runtime_error(strerror(errno));
+    }
+}
+
 //Assumes the code is executed from .../bin and Database location should be ../Database
 string getDbDir(){
   //needs to be big enough for full directory path

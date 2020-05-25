@@ -25,7 +25,7 @@ using std::istream;
 
 class DiskDataBase : public DataBase{
 public:
-  DiskDataBase() = default;
+  DiskDataBase();
   DiskDataBase(const DiskDataBase& d) = default;
   ~DiskDataBase() = default;
   void addNewsgroup(string name) override;
