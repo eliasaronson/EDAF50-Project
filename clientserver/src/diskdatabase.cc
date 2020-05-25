@@ -27,7 +27,6 @@ DiskDataBase::DiskDataBase(){
   while ((entry = readdir(dir)) != NULL) {
     //this needs to be able to handle . and .. file
     string file(entry->d_name);
-    cout << file << endl;
     if (file == "Database") {
       DbFound = true;
     }
