@@ -9,13 +9,37 @@ using std::regex;
 using std::stringstream;
 
 DiskDataBase::DiskDataBase(){
-    string path(getDbDir());
+  char temp[200];
+  getcwd(temp,200);
+  char* pch = temp;
+  pch[strlen(pch)-4]=0;
+  string path(temp);
+	struct dirent *entry;
+	DIR *dir = opendir(path.c_str());
+
+	if (dir == NULL){
+		cout << "opendir failed: " << std::strerror(errno) << endl;
+		throw std::runtime_error("can't open directory");
+	}
+
+  bool DbFound = false;
+
+  while ((entry = readdir(dir)) != NULL) {
+    //this needs to be able to handle . and .. file
+    string file(entry->d_name);
+    cout << file << endl;
+    if (file == "Database") {
+      DbFound = true;
+    }
+  }
+  if (!DbFound) {
     int status = mkdir(path.c_str(),S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     if (status == -1) {
       //unexpected error creating folder
-     	cerr << "Error :  " << strerror(errno) << endl; 
-			throw std::runtime_error(strerror(errno));
+      cerr << "Error :  " << strerror(errno) << endl; 
+		  throw std::runtime_error(strerror(errno));
     }
+  }
 }
 
 //Assumes the code is executed from .../bin and Database location should be ../Database
