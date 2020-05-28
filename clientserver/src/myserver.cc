@@ -74,7 +74,6 @@ unique_ptr<DataBase> chooseDatabase(int ops) {
         unique_ptr<DataBase> db (new LiveDataBase());
         return db;
     } else {
-        // Create diskdatabase instead
         cout << "Creating disk database." << endl;
         unique_ptr<DataBase> db (new DiskDataBase()); 
         return db;
