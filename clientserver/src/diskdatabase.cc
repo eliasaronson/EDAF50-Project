@@ -32,7 +32,8 @@ DiskDataBase::DiskDataBase(){
     }
   }
   if (!DbFound) {
-    int status = mkdir(path.c_str(),S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    string tempPath(path + "/Database");
+    int status = mkdir(tempPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     if (status == -1) {
       //unexpected error creating folder
       cerr << "Error :  " << strerror(errno) << endl; 
