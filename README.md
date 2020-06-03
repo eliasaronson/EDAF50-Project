@@ -1,6 +1,8 @@
 # EDAF50-Project
 Elias H. Aronsson
+
 Olof Karlsson
+
 Anton Sedin
 
 ## Build instructions
